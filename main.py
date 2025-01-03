@@ -56,6 +56,7 @@ admin.add_view(FileAdmin)
 origins = [
     "http://localhost",
     "http://127.0.0.1",
+    "https://sharecode-production.up.railway.app",
 ]
 
 app.add_middleware(

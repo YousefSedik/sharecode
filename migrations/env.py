@@ -28,7 +28,18 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
 
-config.set_main_option("sqlalchemy.url", os.environ.get("DATABASE_URL"))
+def build_pg_url() -> str:
+    username = os.environ.get("POSTGRES_USER")
+    password = os.environ.get("POSTGRES_PASSWORD")
+    server = os.environ.get("POSTGRES_SERVER")
+    db = os.environ.get("POSTGRES_DATABASE")
+    port = os.environ.get("POSTGRES_PORT")
+    if username and password and server and db:
+        return f"postgresql://{username}:{password}@{server}:{port}/{db}"
+    else:
+        raise Exception("Missing environment variables")
+
+config.set_main_option("sqlalchemy.url", build_pg_url())
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
