@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!-- Source Codes By CodingNepal - www.codingnepalweb.com -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login </title>
+  <link rel="stylesheet" href="../static/css/login.css" />
+</head>
+
+<body>
+  <script>
+    async function login(event) {
+        event.preventDefault(); // Prevent the form from reloading the page
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const base_url = "http://127.0.0.1:8000/api";
+      try {
+        const formdata = new FormData();
+        formdata.append("username", username);
+        formdata.append("password", password);
+
+        const response = await fetch(base_url + "/token", {
+          method: "POST",
+          body: formdata  // Use 'body' for FormData instead of 'data'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("token", `${data.token_type} ${data.access_token}`);
+          window.location.href = "/"; // Redirect to another page
+        } else {
+          // Get the error message from the response body
+          const errorData = await response.json();
+          const errorMessage = errorData.detail || "Login failed. Please check your credentials.";
+          displayError([errorMessage]);  // Pass the error message as an array
+        }
+      } catch (error) {
+        displayError(["An error occurred. Please try again later."]);
+      }
+
+      // Function to display the error messages
+      function displayError(messages) {
+        const messagesClass = document.querySelector(".error");
+        messagesClass.innerHTML = "";  // Clear any previous messages
+
+        // Append each error message as a list item
+        messages.forEach(message => {
+          const listItem = document.createElement("li");
+          listItem.textContent = message;
+          messagesClass.appendChild(listItem);
+        });
+
+        messagesClass.style.display = "block";  // Make sure the error messages are visible
+      }
+    }
+
+      function togglePasswordVisibility() {
+        const passwordInput = document.getElementById("id_password");
+        const type = passwordInput.type === "password" ? "text" : "password";
+        passwordInput.type = type;
+      }
+  </script>
+  <div class="login_form">
+    <!-- Login form container -->
+    <form onsubmit="login(event)">
+      <h3>Log in </h3>
+      <br>
+      <div class="messages"style="padding: 10px; color: red;">
+        <ul class="error">
+          <!-- Error messages will be appended here -->
+        </ul>
+      </div>
+      <!-- Email input box -->
+      <div class="input_box">
+        <label for="username">Username</label>
+        <input  type="username" id="username" placeholder="Enter Username" required />
+      </div>
+
+      <!-- Paswwrod input box -->
+      <div class="input_box">
+        <div class="password_title">
+          <label for="password">Password</label>
+          <a href="#">Forgot Password?</a>
+        </div>
+
+        <input  type="password" id="password" placeholder="Enter your password" required />
+      </div>
+
+      <!-- Login button -->
+      <button type="submit">Log In</button>
+      <p class="sign_up">Don't have an account? <a href="/sign-up">Sign up</a></p>
+    </form>
+  </div>
+</body>
+
+</html>
