@@ -134,11 +134,10 @@
     <script>
         // Replace this with the actual project ID
         const projectId = document.location.pathname.split("/").pop();
-        const baseUrl = "http://127.0.0.1:8000";
 
         async function fetchProjectDetails() {
             try {
-                const response = await fetch(`${baseUrl}/api/project/${projectId}`, {
+                const response = await fetch(`/api/project/${projectId}`, {
                     method: "GET",
                     headers: {
                         "Authorization": `${localStorage.getItem("token")}`,
