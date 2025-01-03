@@ -18,9 +18,8 @@
             const password2 = document.getElementById("password2").value;
             const first_name = document.getElementById("first_name").value;
             const last_name= document.getElementById("last_name").value;
-            const base_url = "http://127.0.0.1:8000/api";
             try {
-                const response = await fetch(base_url + "/register", {
+                const response = await fetch(base_url + "/api/register", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

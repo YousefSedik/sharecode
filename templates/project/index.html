@@ -169,10 +169,9 @@
 
     <script>
         // Mock data for projects
-        const baseUrl = "http://127.0.0.1:8000";
         async function fetchProjects() {
             try {
-                const response = await fetch(`${baseUrl}/api/project`, {
+                const response = await fetch("/api/project", {
                     method: "GET",
                     headers: {
                         "Authorization": `${localStorage.getItem("token")}`,
@@ -235,7 +234,7 @@
             const query = this.value;
 
             if (query.length >= 3) {
-                fetch(`api/search-username?q=${query}`)
+                fetch(`/api/search-username?q=${query}`)
                     .then(response => response.json())
                     .then(data => {
                         const resultsContainer = document.getElementById("usernameResults");

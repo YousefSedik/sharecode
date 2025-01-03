@@ -15,13 +15,12 @@
         event.preventDefault(); // Prevent the form from reloading the page
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
-      const base_url = "http://127.0.0.1:8000/api";
       try {
         const formdata = new FormData();
         formdata.append("username", username);
         formdata.append("password", password);
 
-        const response = await fetch(base_url + "/token", {
+        const response = await fetch(base_url + "/api/token", {
           method: "POST",
           body: formdata  // Use 'body' for FormData instead of 'data'
         });
