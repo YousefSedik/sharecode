@@ -143,15 +143,16 @@
                         "Authorization": `${localStorage.getItem("token")}`,
                     },
                 });
-                if (response.status == 401) {
+                if (response.ok) {
+                    const project = await response.json();
+                    displayProjectDetails(project);
+                } 
+                else if (response.status == 401) {
                     window.location.href = "/login";
                 }
-                else if (!response.ok) {
+                else {
                     alert("Failed to fetch project details");
                 }
-
-                const project = await response.json();
-                displayProjectDetails(project);
             } catch (error) {
                 console.error("Error:", error);
                 alert("Unable to load project details. Please try again later.");
