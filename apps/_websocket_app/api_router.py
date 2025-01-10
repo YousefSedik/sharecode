@@ -22,7 +22,7 @@ manager = ConnectionManager()
 async def websocket_endpoint(
     project_id: UUID, websocket: WebSocket, session: AsyncSession = Depends(get_session)
 ):
-    token = websocket.query_params.get("Authorization")
+    token = websocket.query_params.get("token")
     if token is None:
         print("Token is missing")
         await websocket.close()
@@ -53,11 +53,11 @@ async def websocket_endpoint(
                 print("User has no access to the project")
                 await websocket.close()
                 return
-            elif project_access.access == "VIEW":
+            elif project_access.type == "VIEW":
                 access = "view"
-            elif project_access.access == "FULL_ACCESS":
+            elif project_access.type == "FULL_ACCESS":
                 access = "read/write"
-        
+
         if access is None:
             print("User has no access to the project")
             await websocket.close()
@@ -65,8 +65,8 @@ async def websocket_endpoint(
 
     await manager.connect(websocket, username)
     # get project files
-    if manager.number_of_connected_users(project_id) == 1:
-        
+    if await manager.number_of_connected_users(project_id) == 1:
+
         result = await session.execute(select(File).where(File.project_id == project_id))    
     else:
         pass
@@ -80,7 +80,6 @@ async def websocket_endpoint(
                 continue
 
             print(f"Received obj: {obj}")
-            print("Connection manager:")
             print(manager)
 
     except WebSocketDisconnect:
