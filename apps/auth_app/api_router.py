@@ -65,7 +65,8 @@ async def search_username(
     session: AsyncSession = Depends(get_session)
 ):
     users = await session.execute(
-        select(User.username).filter(User.username.like(f"%{q}%"))
+        select(User).filter(User.username.like(f"%{q}%"))
     )
     users = users.scalars().all()
+    users = [{"username": user.username, "id": user.id} for user in users]
     return users
