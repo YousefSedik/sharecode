@@ -85,7 +85,7 @@ async def create_user(session: AsyncSession, user_data):
     if len(user_data.password1) < 8:
         error_list.append("Password must be at least 8 characters")
 
-    if len(user_data.username) <= 4:
+    if len(user_data.username) < 4:
         error_list.append("Username must be at least 4 characters")
 
     if user_data.username.isnumeric():

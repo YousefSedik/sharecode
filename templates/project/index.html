@@ -183,23 +183,23 @@
                 else if (!response.ok) {
                     throw new Error("Failed to fetch project details");
                 }
-
-                const projects = await response.json();
-                const projectList = document.getElementById("projectList");
-
-                projects.forEach((project) => {
-                    const li = document.createElement("li");
-                    li.className = "project-item";
-                    li.innerHTML = `
-                    <h3>${project.name}</h3>
-                    <p hidden> ${project.id}</p>
-                    <p><strong>Created At:</strong> ${formatDate(project.created_at)}</p>
-                    <p><strong>Updated At:</strong> ${formatDate(project.updated_at)}</p>
-                    <p><strong>Access Level:</strong> ${project.type}</p>
-                    <button class="btn-view" onclick="viewProject('${project.id}')">View</button>
-                `;
-                    projectList.appendChild(li);
-                });
+                else {
+                    const projects = await response.json();
+                    const projectList = document.getElementById("projectList");
+                    projects.forEach((project) => {
+                        const li = document.createElement("li");
+                        li.className = "project-item";
+                        li.innerHTML = `
+                        <h3>${project.name}</h3>
+                        <p hidden> ${project.id}</p>
+                        <p><strong>Created At:</strong> ${formatDate(project.created_at)}</p>
+                        <p><strong>Updated At:</strong> ${formatDate(project.updated_at)}</p>
+                        <p><strong>Access Level:</strong> ${project.type}</p>
+                        <button class="btn-view" onclick="viewProject('${project.id}')">View</button>
+                    `;
+                        projectList.appendChild(li);
+                    });
+                }
             } catch (error) {
                 console.error("Error:", error);
                 alert("Unable to load project details. Please try again later.");
@@ -299,38 +299,47 @@
             });
         }
         // Handle form submission
-        document.getElementById("projectForm").addEventListener("submit", function (e) {
+        document.getElementById("projectForm").addEventListener("submit", async function (e) {
             e.preventDefault();
+            async function createProject() {
+                const projectName = document.getElementById("projectName").value;
+                const projectDescription = document.getElementById("projectDescription").value;
+                try {
+                    const response = await fetch("/api/project", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `${localStorage.getItem("token")}`,
+                        },
+                        body: JSON.stringify({
+                            name: projectName,
+                            description: projectDescription,
+                            access_list: access_list,
+                        }),
+                    });
 
-            const projectName = document.getElementById("projectName").value;
-            const projectDescription = document.getElementById("projectDescription").value;
-
-            fetch("/api/project", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `${localStorage.getItem("token")}`,
-                },
-                body: JSON.stringify({
-                    name: projectName,
-                    description: projectDescription,
-                    access_list: access_list
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
+                    if (response.ok) {
+                        data = response.json();
                         alert("Project created successfully!");
                         $('#createProjectModal').modal('hide'); // Hide the modal
+                        window.location.reload();
                     } else {
                         alert("Failed to create project. Please try again.");
                     }
-                })
-                .catch(err => console.error(err));
+                } catch (err) {
+                    console.error(err);
+                    alert("An error occurred while creating the project.");
+                }
+                fetchProjects();
+            }
+            await createProject();
         });
+
         fetchProjects();
 
     </script>
 </body>
 </html>
 <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.slim.js"
+    integrity="sha256-UgvvN8vBkgO0luPSUl2s8TIlOSYRoGFAX4jlCIm9Adc=" crossorigin="anonymous"></script>
