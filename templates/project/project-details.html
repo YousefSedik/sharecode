@@ -60,6 +60,17 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        .delete-button {
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+
+        }
+
         .back-button,
         .browse-button {
             margin-bottom: 1rem;
@@ -108,7 +119,7 @@
 
 
         <button class="browse-button" id="browseProject">Browse Project</button>
-        <button class="delete-button" id="deleteProject">Delete Project</button>
+        <button onclick="deleteProject()" class="delete-button" id="deleteProject">Delete Project</button>
         <div class="section">
             <h2>Currently Browsing</h2>
             <ul id="browsingUsers">
@@ -134,7 +145,29 @@
     <script>
         // Replace this with the actual project ID
         const projectId = document.location.pathname.split("/").pop();
-
+        async function deleteProject() {
+            try {
+                const response = await fetch(`/api/project/${projectId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `${localStorage.getItem("token")}`,
+                    },
+                });
+                if (response.ok) {
+                    window.location.href = "/";
+                } 
+                else if (response.status == 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/login";
+                }
+                else {
+                    alert("Failed to delete project");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Unable to delete project. Please try again later.");
+            }
+        }
         async function fetchProjectDetails() {
             try {
                 const response = await fetch(`/api/project/${projectId}`, {
@@ -148,6 +181,7 @@
                     displayProjectDetails(project);
                 } 
                 else if (response.status == 401) {
+                    localStorage.removeItem("token");
                     window.location.href = "/login";
                 }
                 else {
@@ -160,11 +194,14 @@
         }
 
         function displayProjectDetails(project) {
+            if (project.description == "") {
+                project.description = "No description provided";
+            }
             document.getElementById("projectName").textContent = project.name;
             document.getElementById("projectDescription").textContent = project.description;
             document.getElementById("createdAt").textContent = new Date(project.created_at).toLocaleString();
             document.getElementById("updatedAt").textContent = new Date(project.updated_at).toLocaleString();
-
+            document.getElementById("accessLevel").textContent = project.access_type;
             const accessList = document.getElementById("accessList");
             project.access_list.forEach((access) => {
                 const li = document.createElement("li");
