@@ -36,7 +36,7 @@ async def create_project(
     if project.access_list:
         for access in project.access_list:
             project_access = ProjectAccess(
-                user_id=access.user_id,
+                user_id=int(access.user_id),
                 type=access.access_level,
                 project_id=new_project.id,
             )
@@ -159,10 +159,17 @@ async def get_project_details(
     # Ensure project exists
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-
+    
+    access_level = None
     # Transform access_list to include `username`
     access_list_with_usernames = []
     for access in project.access_list:
+        if access.user_id == current_user.id:
+            if access.type == "FULL_ACCESS":
+                access_level = "Read/Write"
+            elif access.type == "VIEW":
+                access_level = "Read"
+        
         access_list_with_usernames.append(
             {
                 "id": access.id,
@@ -182,16 +189,21 @@ async def get_project_details(
         }
         for file in project.files
     ]
-
+    if access_level is None:
+        access_level = "Owner"
+    
     # Construct the response
     project_response = {
         "id": project.id,
         "name": project.name,
         "description": project.description,
+        "access_type": access_level,
         "access_list": access_list_with_usernames,
+        "created_at": project.created_at,
+        "updated_at": project.updated_at,
         "files": files,
     }
-
+    project_response = ProjectResponse(**project_response)
     return project_response
 
 

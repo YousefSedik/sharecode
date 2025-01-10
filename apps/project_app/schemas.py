@@ -1,11 +1,13 @@
 from pydantic import BaseModel, Field, EmailStr
 from pydantic import field_validator
 from typing import List, Optional
+from datetime import datetime
 from uuid import UUID
 
 class CreateProjectAccessList(BaseModel):
+    user_id: int = Field(..., title="User Id")
     username: str = Field(..., title="Username")
-    type: str = Field(..., title="Access level")
+    access_level: str = Field(..., title="Access level")
 
 class CreateProject(BaseModel):
     name: str = Field(..., title="Project name")
@@ -60,6 +62,9 @@ class ProjectResponse(BaseModel):
     id: UUID
     name: str
     description: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+    access_type: str
     access_list: List[ProjectAccessResponse] = []
     files: List[FileResponse] = []
 

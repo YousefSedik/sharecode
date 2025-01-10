@@ -156,6 +156,34 @@
 </head>
 
 <body>
+    <script>
+        domain = document.location.host;
+        protocol = document.location.protocol;
+        project_id = document.location.pathname.split("/")[2]
+
+        if (protocol == "https:"){
+            url = "wss://";
+        }
+        else { // http
+            url = "ws://";
+        }        
+        url += domain + `/api/ws/join-project/${project_id}`;
+        const token = localStorage.getItem("token");
+        url += `?token=${token}`;
+        const webSocket = new WebSocket(url);
+        webSocket.onopen = () => {
+            console.log("WebSocket connection established.");
+        };
+        webSocket.onmessage = (event) => {
+            console.log("Message received:", event.data);
+        };
+        webSocket.onclose = () => {
+            alert("connection closed, redirecting to login page");
+            window.location.href = "/login";
+            console.log("WebSocket connection closed.");
+        };
+        
+    </script>
     <div class="sidebar">
         <h2>
             <button id="back-button"><i class="fas fa-arrow-left"></i> Back</button>
