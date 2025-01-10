@@ -18,7 +18,7 @@ oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 30000
 
 
 def verify_password(plain_password, hashed_password):
@@ -103,7 +103,7 @@ async def create_user(session: AsyncSession, user_data):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_list)
 
     user = User(
-        username=user_data.username,
+        username=user_data.username.lower(),
         password=get_password_hash(user_data.password1),
         first_name=user_data.first_name,
         last_name=user_data.last_name,
