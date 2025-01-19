@@ -13,6 +13,22 @@ function redirectToHome() {
 function redirectToProfile() {
 
 }
+function redirectToDashboard() {
+	// check if user is logged in
+	const token = localStorage.getItem('token');
+	if (!token) {
+		return 
+	}
+	// decode jwt token
+	const decoded = JSON.parse(atob(token.split('.')[1]));
+	// check if token is expired
+	if (Date.now() >= decoded.exp * 1000) {
+		redirectToLogin();
+	}
+	else {
+		window.location.href = '/'; // Redirects to the /dashboard route
+	}
+}
 
 function logout() {
 	localStorage.removeItem('token');
