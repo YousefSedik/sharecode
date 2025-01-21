@@ -5,7 +5,6 @@ router = APIRouter()
 
 @router.get("/login", response_class=HTMLResponse)
 async def login():
-    print("Login page")
     with open("templates/auth/login.html") as f:
         return HTMLResponse(f.read())
 

@@ -232,7 +232,6 @@ async def grant_access(
     project_access = ProjectAccess(
         user_id=user_id, type=access_level, project_id=project.id
     )
-    print(project_access)
     session.add(project_access)
     try:
         await session.commit()
@@ -305,7 +304,6 @@ async def get_access(
         )
         accesses = result.scalars().all()
         if current_user.id in [access.user_id for access in accesses] + [project.owner_id]:
-            print(accesses)
             return accesses
         else:
             raise HTTPException(status_code=403, detail="Forbidden")

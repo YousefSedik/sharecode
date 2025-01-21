@@ -10,12 +10,14 @@
 </head>
 
 <body>
+  <script src="/static/js/script.js"></script>
+
   <script>
+    redirectToDashboard(); 
     async function login(event) {
         event.preventDefault(); // Prevent the form from reloading the page
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
-      console.log(username, password);
       try {
         const formdata = new FormData();
         formdata.append("username", username);
