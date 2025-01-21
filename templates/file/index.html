@@ -4,278 +4,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Files</title>
-    <!-- CodeMirror Styles -->
+    <title>DevSpace - Collaborative Code Editor</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
-    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <!-- CodeMirror Autocomplete Addon -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
-    <!-- Custom Styles -->
     <style>
-        body {
-    margin: 0;
-    display: flex;
-    height: 100vh;
-    font-family: Arial, sans-serif;
-    overflow: auto; /* Allow the whole page to scroll */
-}
+        .CodeMirror {
+            height: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
 
-.sidebar {
-    width: 20%;
-    background-color: #1e1e1e;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    position: sticky;
-    top: 0; /* Make the sidebar sticky at the top */
-    height: 100vh; /* Ensure the sidebar takes full height */
-}
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
 
-.sidebar h2 {
-    padding: 1rem;
-    font-size: 1.2rem;
-    border-bottom: 1px solid #333;
-    margin: 0;
-}
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
 
-.sidebar-controls {
-    padding: 0.5rem 1rem;
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
 
-.sidebar-controls button,
-.sidebar-controls input {
-    padding: 0.6rem;
-    background-color: #007acc;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.sidebar-controls button:hover,
-.sidebar-controls input:hover {
-    background-color: #005f99;
-}
-
-.sidebar-controls input {
-    flex: 1;
-}
-
-.file-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    flex-grow: 1;
-    overflow-y: auto; /* Allow scrolling inside the file list */
-}
-
-.file-list li {
-    padding: 0.8rem 1rem;
-    cursor: pointer;
-    border-bottom: 1px solid #333;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.file-list li span {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.file-list li input {
-    flex: 1;
-    background: transparent;
-    color: white;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-}
-
-.file-list li:hover {
-    background-color: #2d2d2d;
-}
-
-.file-list li.active {
-    background-color: #007acc;
-    color: white;
-}
-
-.file-list li i {
-    margin-left: 0.5rem;
-    cursor: pointer;
-}
-
-.editor {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: #1e1e1e;
-    overflow-y: auto; /* Make the editor area scrollable */
-}
-
-.editor-header {
-    padding: 1rem;
-    background-color: #252526;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #333;
-}
-
-.editor-header h3 {
-    margin: 0;
-    font-size: 1rem;
-}
-
-.codemirror-wrapper {
-    flex: 1;
-    padding: 1rem;
-}
-
-.CodeMirror {
-    height: 100%;
-    border: 1px solid #333;
-    border-radius: 5px;
-    font-size: 1rem;
-}
-
+        ::-webkit-scrollbar-thumb:hover {
+            background: #606060;
+        }
     </style>
 </head>
 
-<body>
-    <script>
-        domain = document.location.host;
-        protocol = document.location.protocol;
-        project_id = document.location.pathname.split("/")[2]
+<body class="bg-gray-950 text-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col h-full">
+            <div class="flex items-center space-x-2 mb-6">
+                <i class="fas fa-code text-purple-500 text-2xl"></i>
+                <h2 class="text-xl font-bold text-purple-500">Share Code </h2>
+            </div>
 
-        if (protocol == "https:"){
-            url = "wss://";
-        }
-        else { // http
-            url = "ws://";
-        }        
-        url += domain + `/api/ws/join-project/${project_id}`;
+            <div class="flex flex-col space-y-2">
+                <div class="relative">
+                    <input id="new-file-name" type="text" placeholder="New file name" class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md
+                                  focus:outline-none focus:border-purple-500 transition-colors">
+                </div>
+                <button id="create-file" class="p-2 bg-purple-600 hover:bg-purple-700 rounded-md
+                               transition-colors duration-200 flex items-center justify-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Create File
+                </button>
+            </div>
+
+            <div class="mt-6">
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">FILES</h3>
+                <ul id="file-list" class="space-y-1 overflow-y-auto">
+                    <!-- Files will be dynamically added here -->
+                </ul>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">COLLABORATORS</h3>
+                <ul id="user-list" class="space-y-2">
+                    <!-- Online users will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Editor Area -->
+        <div class="flex-1 flex flex-col">
+            <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex space-x-2">
+                        <button id="save-project" class="p-2 hover:bg-gray-800 rounded-md transition-colors">
+                            <i class="fas fa-save"></i>
+                            |
+                        </button>
+                    </div>
+                    <h3 id="file-name" class="text-lg font-semibold">Untitled</h3>
+                    <span id="file-type" class="ml-2 px-2 py-1 text-xs bg-gray-800 rounded-md text-gray-400"></span>
+                </div>
+            </div>
+            <div id="editor-wrapper" class="flex-1 relative">
+                <textarea id="code-editor"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket Initialization
+        const domain = window.location.host;
+        const protocol = window.location.protocol;
+        const projectId = window.location.pathname.split("/")[2];
         const token = localStorage.getItem("token");
-        url += `?token=${token}`;
-        const webSocket = new WebSocket(url);
-        webSocket.onopen = () => {
-            console.log("WebSocket connection established.");
-        };
-        webSocket.onmessage = (event) => {
-            console.log("Message received:", event.data);
-        };
-        webSocket.onclose = () => {
-            alert("connection closed, redirecting to login page");
-            window.location.href = "/login";
-            console.log("WebSocket connection closed.");
-        };
-        
-    </script>
-    <div class="sidebar">
-        <h2>
-            <button id="back-button"><i class="fas fa-arrow-left"></i> Back</button>
-            <script>
-                document.getElementById("back-button").addEventListener("click", () => {
-                window.history.back();
-                });
-            </script>
-        </h2>
-        <div class="sidebar-controls">
-            <input type="text" id="new-file-name" placeholder="Enter file name" />
-            <button id="create-file"><i class="fas fa-plus"></i> New File</button>
-        </div>
-        <ul class="file-list" id="file-list">
-            <!-- Files will be dynamically generated here -->
-        </ul>
-    </div>
-    <div class="editor">
-        <div class="editor-header">
-            <h3 id="file-name">Untitled</h3>
-        </div>
-        <div class="codemirror-wrapper">
-            <textarea id="code-editor">// Code goes here</textarea>
-        </div>
-    </div>
 
-    <!-- CodeMirror Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/javascript-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/css-hint.min.js"></script>
-    <script>
+        const wsUrl = `${protocol === "https:" ? "wss://" : "ws://"}${domain}/api/ws/join-project/${projectId}?token=${token}`;
+        const webSocket = new WebSocket(wsUrl);
+
+        // Global Variables
+        let files = {};
+        let activeFile = null;
+        let users = [];
+        let userId = Math.random().toString(36).substring(7);
+        const userColors = [
+            '#9333ea', // Purple
+            '#ec4899', // Pink
+            '#14b8a6', // Teal
+            '#f97316', // Orange
+            '#8b5cf6', // Violet
+        ];
+        const userColor = userColors[Math.floor(Math.random() * userColors.length)];
+
+        // Initialize CodeMirror Editor
         const codeEditor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             lineNumbers: true,
-            mode: "htmlmixed",
-            theme: "dracula",
+            mode: "javascript",
+            theme: "monokai",
             styleActiveLine: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            indentUnit: 4,
+            tabSize: 4,
+            lineWrapping: true,
             extraKeys: {
-                "Ctrl-Space": "autocomplete"
-            },
+                "Ctrl-Space": "autocomplete",
+                "Tab": function (cm) {
+                    if (cm.somethingSelected()) {
+                        cm.indentSelection("add");
+                    } else {
+                        cm.replaceSelection("    ", "end");
+                    }
+                }
+            }
         });
 
-        const files = {
-            "index.html": "<!DOCTYPE html>\n<html>\n<body>\n<h1>Hello World</h1>\n</body>\n</html>",
-            "style.css": "body {\n  background-color: #1e1e1e;\n  color: white;\n}",
-            "script.js": "console.log('Hello World');",
-        };
-
-        let activeFile = "index.html";
-
-        const fileList = document.getElementById("file-list");
-
-        function updateFileList() {
-            fileList.innerHTML = "";
-            Object.keys(files).forEach((file) => {
-                const li = document.createElement("li");
-                li.className = activeFile === file ? "active" : "";
-                li.setAttribute("data-file", file);
-
-                const span = document.createElement("span");
-                span.textContent = file;
-                span.addEventListener("click", () => loadFile(file));
-
-                const renameIcon = document.createElement("i");
-                renameIcon.className = "fas fa-edit";
-                renameIcon.title = "Rename";
-                renameIcon.addEventListener("click", (e) => startRenaming(e, file, span));
-
-                const deleteIcon = document.createElement("i");
-                deleteIcon.className = "fas fa-trash";
-                deleteIcon.title = "Delete";
-                deleteIcon.addEventListener("click", (e) => deleteFile(e, file));
-
-                li.appendChild(span);
-                li.appendChild(renameIcon);
-                li.appendChild(deleteIcon);
-                fileList.appendChild(li);
-            });
+        // Update File Type Badge
+        function updateFileTypeBadge(fileName) {
+            const ext = fileName.split('.').pop();
+            const badge = document.getElementById('file-type');
+            badge.textContent = ext.toUpperCase();
         }
 
+        // Load File into Editor
         function loadFile(fileName) {
             activeFile = fileName;
             document.getElementById("file-name").textContent = fileName;
+            updateFileTypeBadge(fileName);
             codeEditor.setValue(files[fileName]);
             codeEditor.setOption("mode", getFileMode(fileName));
-            updateFileList();
-        }
+            codeEditor.refresh();
 
+            // Update active file in file list
+            document.querySelectorAll('#file-list li').forEach(li => {
+                li.classList.remove('bg-purple-600', 'bg-opacity-50');
+                if (li.dataset.fileName === fileName) {
+                    li.classList.add('bg-purple-600', 'bg-opacity-50');
+                }
+            });
+        }
         function getFileMode(fileName) {
             const ext = fileName.split(".").pop();
             switch (ext) {
@@ -287,64 +182,306 @@
             }
         }
 
-        function deleteFile(event, fileName) {
-            event.stopPropagation();
-            if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
-                delete files[fileName];
-                activeFile = Object.keys(files)[0] || "Untitled";
-                if (activeFile !== "Untitled") {
-                    loadFile(activeFile);
-                } else {
-                    document.getElementById("file-name").textContent = activeFile;
-                    codeEditor.setValue("");
-                    codeEditor.setOption("mode", "text/plain");
+        function createFileListItem(fileName) {
+            const li = document.createElement("li");
+            li.dataset.fileName = fileName;
+            li.className = `p-2 rounded-md hover:bg-gray-800 cursor-pointer
+                   ${activeFile === fileName ? 'bg-purple-600 bg-opacity-50' : ''}
+                   flex justify-between items-center`;
+
+            const fileIcon = getFileIcon(fileName);
+            li.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="${fileIcon} text-gray-400"></i>
+            <span>${fileName}</span>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="renameFile('${fileName}')" 
+                    class="p-1 text-gray-400 hover:text-purple-500 transition-colors">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteFile('${fileName}')"
+                    class="p-1 text-gray-400 hover:text-red-500 transition-colors">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+
+            li.addEventListener("click", (e) => {
+                if (!e.target.closest('button')) {
+                    loadFile(fileName);
                 }
-                updateFileList();
-            }
-        }
-
-        function startRenaming(event, fileName, span) {
-            event.stopPropagation();
-            const input = document.createElement("input");
-            input.value = fileName;
-            input.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") saveRename(fileName, input.value);
             });
-            input.addEventListener("blur", () => cancelRename(span, fileName));
-            span.replaceWith(input);
-            input.focus();
+
+            return li;
         }
 
-        function saveRename(oldName, newName) {
-            if (newName && !files[newName]) {
-                files[newName] = files[oldName];
-                delete files[oldName];
-                loadFile(newName);
-            } else {
-                alert("Invalid or duplicate file name.");
+        // Get File Icon
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop();
+            switch (ext) {
+                case 'html': return 'fab fa-html5';
+                case 'css': return 'fab fa-css3-alt';
+                case 'js': return 'fab fa-js';
+                case 'py': return 'fab fa-python';
+                default: return 'far fa-file-code';
             }
-            updateFileList();
         }
 
-        function cancelRename(span, fileName) {
-            span.textContent = fileName;
-            updateFileList();
+        // Update User List
+        function updateUserList() {
+            const userList = document.getElementById("user-list");
+            userList.innerHTML = "";
+            users.forEach(username => {
+                const li = document.createElement("li");
+                li.className = "flex items-center space-x-2 p-2 rounded-md";
+                li.innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span class="text-sm">${username}</span>
+                `;
+                userList.appendChild(li);
+            });
         }
 
+        // Event Listeners and other functions remain similar to the original,
+        // but with updated styling classes to match the new theme
+
+        webSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            console.log("Received message:", message);
+            switch (message.type) {
+                case "init-files":
+                    updateFileList(message.files);
+                    break;
+                case "file-update":
+                    if (message.file_id === activeFile) {
+                        const cursor = codeEditor.getCursor();
+                        codeEditor.setValue(message.new_content);
+                        codeEditor.setCursor(cursor);
+                    }
+                    break;
+                case "user-joined":
+                    notifyUserJoined(message.username);
+                    users.push(message.username);
+                    updateUserList();
+                    break;
+                case "user-left":
+                    notifyUserLeft(message.username);
+                    users = users.filter(user => user !== message.username);
+                    updateUserList();
+                    break;
+                case "joined-users":
+                    users = message.usernames;
+                    updateUserList();
+                    break;
+                case "file-rename":
+                    handleFileRename(message.old_name, message.new_name);
+                    break;
+                case "file-delete":
+                    handleFileDelete(message.file_name);
+                    break;
+                case "file-create": // Handle broadcasted file creation
+                    handleFileCreate(message.file_name);
+                    break;
+                default:
+                    console.warn("Unknown message type:", message.type);
+            }
+        };
+        function handleFileCreate(fileName) {
+            if (!files[fileName]) {
+                files[fileName] = ""; // Add the new file to the files object
+                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+            }
+        }
+        // Initialize the editor size
+        window.addEventListener("resize", () => {
+            codeEditor.refresh();
+        });
+        // Notify when a user leaves
+        function notifyUserLeft(username) {
+            const notification = document.createElement("div");
+            notification.className = "fixed bottom-4 right-4 p-4 bg-red-600 text-white rounded-lg shadow-lg";
+            notification.textContent = `${username} left the project.`;
+            document.body.appendChild(notification);
+
+            // Remove the notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        function notifyUserJoined(username) {
+            const notification = document.createElement("div");
+            notification.className = "fixed bottom-4 right-4 p-4 bg-green-600 text-white rounded-lg shadow-lg";
+            notification.textContent = `${username} joined the project!`;
+            document.body.appendChild(notification);
+
+            // Remove the notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        // Update File List
+        function updateFileList(fileData) {
+            files = {}; // Reset the files object
+            fileData.forEach(file => {
+                files[file.name] = file.content; // Map file name to content
+            });
+
+            const fileList = document.getElementById("file-list");
+            fileList.innerHTML = ""; // Clear the existing list
+
+            Object.keys(files).forEach(fileName => {
+                const li = document.createElement("li");
+                li.className = `p-2 rounded ${activeFile === fileName ? "bg-blue-600" : "hover:bg-gray-700"} flex justify-between items-center`;
+                li.innerHTML = `
+                    <span>${fileName}</span>
+                    <div class="flex space-x-2">
+                        <button onclick="renameFile('${fileName}')" class="p-1 text-sm text-yellow-400 hover:text-yellow-500">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteFile('${fileName}')" class="p-1 text-sm text-red-400 hover:text-red-500">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                li.addEventListener("click", () => loadFile(fileName));
+                fileList.appendChild(li);
+            });
+        }
+        function renameFile(fileName) {
+            const newFileName = prompt("Enter new file name:", fileName);
+            if (newFileName && newFileName !== fileName) {
+                files[newFileName] = files[fileName];
+                delete files[fileName];
+                if (activeFile === fileName) {
+                    activeFile = newFileName;
+                }
+                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+
+                // Send WebSocket message
+                webSocket.send(JSON.stringify({
+                    type: "file-rename",
+                    old_name: fileName,
+                    new_name: newFileName,
+                }));
+            }
+        }
+        function deleteFile(fileName) {
+            if (confirm(`Are you sure you want to delete ${fileName}?`)) {
+                delete files[fileName];
+                if (activeFile === fileName) {
+                    activeFile = null;
+                    document.getElementById("file-name").textContent = "Untitled";
+                    codeEditor.setValue("");
+                }
+                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+
+                // Send WebSocket message
+                webSocket.send(JSON.stringify({
+                    type: "file-delete",
+                    file_name: fileName,
+                }));
+            }
+        }
+        function handleFileRename(oldName, newName) {
+            if (files[oldName] != undefined) {
+                files[newName] = files[oldName]; // Move content to the new name
+                delete files[oldName]; // Remove the old file entry
+
+                if (activeFile === oldName) {
+                    activeFile = newName; // Update active file if it was renamed
+                    document.getElementById("file-name").textContent = newName;
+                    updateFileTypeBadge(newName);
+                }
+
+                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+            }
+
+        }
+        // Save Project Button
+        document.getElementById("save-project").addEventListener("click", () => {
+            webSocket.send(JSON.stringify({
+                type: "save-project",
+            }));
+            // Notify the user
+            alert("Project saved successfully!");
+        });
+        // Create File Button
         document.getElementById("create-file").addEventListener("click", () => {
-            const newFileName = document.getElementById("new-file-name").value || prompt("Enter new file name:");
+            const newFileName = document.getElementById("new-file-name").value.trim();
             if (newFileName && !files[newFileName]) {
+                // Add the new file to the files object
                 files[newFileName] = "";
+
+                // Update the file list UI
+                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+
+                // Send WebSocket message to create the file
+                webSocket.send(JSON.stringify({
+                    type: "file-create",
+                    file_name: newFileName,
+                }));
+
+                // Clear the input field
+                document.getElementById("new-file-name").value = "";
+
+                // Load the new file into the editor
                 loadFile(newFileName);
             } else {
-                alert("File already exists or invalid name.");
+                alert("File name is invalid or already exists.");
             }
         });
+        function handleFileDelete(fileName) {
+            if (files[fileName]) {
+                delete files[fileName]; // Remove the file from the files object
 
-        
+                if (activeFile === fileName) {
+                    activeFile = null; // Clear active file if it was deleted
+                    document.getElementById("file-name").textContent = "Untitled";
+                    codeEditor.setValue("");
+                }
 
-        updateFileList();
-        loadFile(activeFile);
+                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+            }
+        }
+        /*function updateFileList(fileData) {
+            files = {}; // Reset the files object
+            fileData.forEach(file => {
+                files[file.name] = file.content; // Map file name to content
+            });
+
+            const fileList = document.getElementById("file-list");
+            fileList.innerHTML = ""; // Clear the existing list
+
+            Object.keys(files).forEach(fileName => {
+                const li = createFileListItem(fileName);
+                fileList.appendChild(li);
+            });
+
+            // Load the first file if no file is active
+            if (!activeFile && Object.keys(files).length > 0) {
+                loadFile(Object.keys(files)[0]);
+            }
+        }*/
+        function updateFileList(fileData) {
+            files = {}; // Reset the files object
+            fileData.forEach(file => {
+                files[file.name] = file.content; // Map file name to content
+            });
+
+            const fileList = document.getElementById("file-list");
+            fileList.innerHTML = ""; // Clear the existing list
+
+            Object.keys(files).forEach(fileName => {
+                const li = createFileListItem(fileName);
+                fileList.appendChild(li);
+            });
+
+            // Load the first file if no file is active
+            if (!activeFile && Object.keys(files).length > 0) {
+                loadFile(Object.keys(files)[0]);
+            }
+        }
     </script>
 </body>
 
