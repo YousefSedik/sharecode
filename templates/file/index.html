@@ -432,7 +432,7 @@
             }
         });
         function handleFileDelete(fileName) {
-            if (files[fileName]) {
+            if (files[fileName] != undefined) {
                 delete files[fileName]; // Remove the file from the files object
 
                 if (activeFile === fileName) {
@@ -444,25 +444,7 @@
                 updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
             }
         }
-        /*function updateFileList(fileData) {
-            files = {}; // Reset the files object
-            fileData.forEach(file => {
-                files[file.name] = file.content; // Map file name to content
-            });
-
-            const fileList = document.getElementById("file-list");
-            fileList.innerHTML = ""; // Clear the existing list
-
-            Object.keys(files).forEach(fileName => {
-                const li = createFileListItem(fileName);
-                fileList.appendChild(li);
-            });
-
-            // Load the first file if no file is active
-            if (!activeFile && Object.keys(files).length > 0) {
-                loadFile(Object.keys(files)[0]);
-            }
-        }*/
+        
         function updateFileList(fileData) {
             files = {}; // Reset the files object
             fileData.forEach(file => {
