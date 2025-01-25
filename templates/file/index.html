@@ -62,9 +62,13 @@
 
 <body class="bg-gray-950 text-gray-100">
     <div class="flex h-screen">
+        <button id="sidebar-toggle" class="fixed top-4 left-4 p-2 bg-purple-600 rounded-lg lg:hidden z-20">
+        <i class="fas fa-bars"></i>
+        </button>
         <!-- Sidebar -->
-        <div class="sidebar bg-gray-900 border-r border-gray-800 p-4 flex flex-col">
-            <div class="flex items-center space-x-2 mb-6">
+    <div id="sidebar"
+        class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">            
+        <div class="flex items-center space-x-2 mb-6">
                 <i class="fas fa-code text-purple-500 text-2xl"></i>
                 <h2 class="text-xl font-bold text-purple-500">Share Code </h2>
             </div>
@@ -97,7 +101,7 @@
         </div>
 
         <!-- Editor Area -->
-    <div class="editor bg-gray-950 flex flex-col">
+    <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
             <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
                 <div class="flex items-center">
                     <div class="flex space-x-2">
@@ -117,6 +121,10 @@
     </div>
 
     <script>
+        document.getElementById("sidebar-toggle").addEventListener("click", () => {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("-translate-x-full");
+        });
         // WebSocket Initialization
         const domain = window.location.host;
         const protocol = window.location.protocol;
