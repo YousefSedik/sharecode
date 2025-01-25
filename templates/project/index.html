@@ -278,7 +278,7 @@
                     return;
                 }
             }
-            if (accessMode == "View Only"){
+            if (accessMode == "view"){
                 accessMode = "VIEW";
             }
             else{
@@ -309,7 +309,7 @@
                 listItem.classList.add("list-group-item");
                 console.log(user);
                 listItem.setAttribute("user_id", user.user_id);
-                listItem.textContent = `${user.username} - ${user.accessMode === 'view' ? 'View Only' : 'View/Edit'}`;
+                listItem.textContent = `${user.username} - ${user.access_level === 'VIEW' ? 'View Only' : 'View/Edit'}`;
                 accessList.appendChild(listItem);
             });
         }
