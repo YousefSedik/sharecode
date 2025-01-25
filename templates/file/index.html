@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevSpace - Collaborative Code Editor</title>
+    <title>ShareCode - Collaborative Code Editor</title>
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
@@ -18,6 +18,22 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
+        .sidebar {
+        position: fixed; /* Make the sidebar fixed */
+        top: 0; /* Stick to the top */
+        left: 0; /* Stick to the left */
+        height: 100vh; /* Full height of the viewport */
+        width: 16rem; /* Width of the sidebar (64 = 16rem in Tailwind) */
+        overflow-y: auto; /* Allow scrolling within the sidebar if content overflows */
+        z-index: 10; /* Ensure the sidebar stays above other content */
+    }
+
+    .editor {
+        margin-left: 16rem; /* Offset the editor by the width of the sidebar */
+        width: calc(100% - 16rem); /* Adjust the width of the editor */
+        height: 100vh; /* Full height of the viewport */
+        overflow-y: auto; /* Allow scrolling within the editor */
+    }
         .CodeMirror {
             height: 100%;
             font-family: 'JetBrains Mono', monospace;
@@ -46,9 +62,13 @@
 
 <body class="bg-gray-950 text-gray-100">
     <div class="flex h-screen">
+        <button id="sidebar-toggle" class="fixed top-4 left-4 p-2 bg-purple-600 rounded-lg lg:hidden z-20">
+        <i class="fas fa-bars"></i>
+        </button>
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col h-full">
-            <div class="flex items-center space-x-2 mb-6">
+    <div id="sidebar"
+        class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">            
+        <div class="flex items-center space-x-2 mb-6">
                 <i class="fas fa-code text-purple-500 text-2xl"></i>
                 <h2 class="text-xl font-bold text-purple-500">Share Code </h2>
             </div>
@@ -66,14 +86,14 @@
             </div>
 
             <div class="mt-6">
-                <h3 class="text-sm font-semibold text-gray-400 mb-2">FILES</h3>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Files</h3>
                 <ul id="file-list" class="space-y-1 overflow-y-auto">
                     <!-- Files will be dynamically added here -->
                 </ul>
             </div>
 
             <div class="mt-auto pt-4 border-t border-gray-800">
-                <h3 class="text-sm font-semibold text-gray-400 mb-2">COLLABORATORS</h3>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Collaborators</h3>
                 <ul id="user-list" class="space-y-2">
                     <!-- Online users will be dynamically added here -->
                 </ul>
@@ -81,7 +101,7 @@
         </div>
 
         <!-- Editor Area -->
-        <div class="flex-1 flex flex-col">
+    <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
             <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
                 <div class="flex items-center">
                     <div class="flex space-x-2">
@@ -101,6 +121,10 @@
     </div>
 
     <script>
+        document.getElementById("sidebar-toggle").addEventListener("click", () => {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("-translate-x-full");
+        });
         // WebSocket Initialization
         const domain = window.location.host;
         const protocol = window.location.protocol;
@@ -113,7 +137,7 @@
         // Global Variables
         let files = {};
         let activeFile = null;
-        let users = [];
+        let users = new Set();
         let userId = Math.random().toString(36).substring(7);
         const userColors = [
             '#9333ea', // Purple
@@ -128,7 +152,7 @@
         const codeEditor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             lineNumbers: true,
             mode: "javascript",
-            theme: "monokai",
+            theme: "dracula",
             styleActiveLine: true,
             matchBrackets: true,
             autoCloseBrackets: true,
@@ -232,7 +256,7 @@
         function updateUserList() {
             const userList = document.getElementById("user-list");
             userList.innerHTML = "";
-            users.forEach(username => {
+            Array.from(users).forEach(username => {
                 const li = document.createElement("li");
                 li.className = "flex items-center space-x-2 p-2 rounded-md";
                 li.innerHTML = `
@@ -245,7 +269,13 @@
 
         // Event Listeners and other functions remain similar to the original,
         // but with updated styling classes to match the new theme
-
+        webSocket.onopen = () => {
+            console.log("WebSocket connection established.");
+        };
+        webSocket.onclose = () => {
+            alert("Connection to the server was lost. Please refresh the page.");
+            console.log("WebSocket connection closed.");
+        };
         webSocket.onmessage = (event) => {
             const message = JSON.parse(event.data);
             console.log("Received message:", message);
@@ -254,24 +284,27 @@
                     updateFileList(message.files);
                     break;
                 case "file-update":
-                    if (message.file_id === activeFile) {
+                    console.log("File update received:", message);
+                    if (message.file_name === activeFile) {
                         const cursor = codeEditor.getCursor();
-                        codeEditor.setValue(message.new_content);
+                        console.log("Setting editor content:", message.content);
+                        codeEditor.setValue(message.content);
+                        console.log("Restoring cursor position:", cursor);
                         codeEditor.setCursor(cursor);
                     }
                     break;
                 case "user-joined":
                     notifyUserJoined(message.username);
-                    users.push(message.username);
+                    users.add(message.username);
                     updateUserList();
                     break;
                 case "user-left":
                     notifyUserLeft(message.username);
-                    users = users.filter(user => user !== message.username);
+                    users.delete(message.username); // Remove the user
                     updateUserList();
                     break;
                 case "joined-users":
-                    users = message.usernames;
+                    users = new Set(message.usernames);
                     updateUserList();
                     break;
                 case "file-rename":
@@ -464,6 +497,24 @@
                 loadFile(Object.keys(files)[0]);
             }
         }
+        // Track changes in the editor
+        codeEditor.on("change", (editor, change) => {
+            // Ignore changes triggered by setValue (like initial loading)
+            if (change.origin === "setValue") return;
+
+            console.log("Editor content changed.");
+            const content = editor.getValue();
+            const fileName = activeFile;
+
+            if (fileName) {
+                webSocket.send(JSON.stringify({
+                    type: "file-update",
+                    file_name: activeFile,  // Changed from "file_name" to match server expectation
+                    content: content,
+                    timestamp: Date.now(),
+                }));
+            }
+        });
     </script>
 </body>
 

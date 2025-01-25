@@ -37,15 +37,16 @@ async def websocket_endpoint(
                 print("Received data is not a json object: ", e)
                 continue
             print(f"Received obj: {obj}")
-            type = obj.get("type")
+            type = obj.get("type", "")
             if type == "file-update":
-                await manager.handle_file_update(project_id, websocket, obj)
+                print(username)
+                await manager.handle_file_update(project_id, websocket, obj, username)
             elif type == "file-rename":
-                await manager.handle_file_rename(project_id, websocket, obj)
+                await manager.handle_file_rename(project_id, websocket, obj, username)
             elif type == "file-delete":
-                await manager.handle_file_delete(project_id, websocket, obj)
+                await manager.handle_file_delete(project_id, websocket, obj, username)
             elif type == "file-create":
-                await manager.handle_file_create(project_id, websocket, obj)
+                await manager.handle_file_create(project_id, websocket, obj, username)
             elif type == "save-project":
                 await manager.handle_save(project_id, session)
             print(manager)

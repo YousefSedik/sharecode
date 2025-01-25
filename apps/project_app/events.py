@@ -1,6 +1,6 @@
 from sqlalchemy import event
 from sqlalchemy.orm import Session
-from models import Project
+from models import Project, File, ProjectAccess
 from datetime import datetime
 
 
@@ -8,5 +8,7 @@ from datetime import datetime
 @event.listens_for(Session, "after_flush")
 def update_updated_at(session, flush_context, instances):
     for instance in session.dirty:
-        if isinstance(instance, Project):  # Check if the instance is a Project
+        if isinstance(
+            instance, (Project, File)
+        ):  # Check if the instance is a Project
             instance.updated_at = datetime.now(datetime.timezone.utc)

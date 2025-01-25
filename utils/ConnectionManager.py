@@ -28,7 +28,7 @@ class ConnectionManager:
             else:
                 await self.send_project_files(project_id, websocket)
                 await self.broadcast(
-                    project_id, {"type": "user-joined", "username": username}
+                    project_id, {"type": "user-joined", "username": username}, username
                 )
                 self.project_connected_users[project_id].append([websocket, username])
 
@@ -53,34 +53,44 @@ class ConnectionManager:
         """
 
         for project_id, li in self.project_connected_users.items():
+            save_ws, save_username = None, None
             for ws, username in li:
                 if ws == websocket:
-                    li.remove([ws, username])
+                    save_ws = ws
+                    save_username = username
                     print(f"Disconnected: {websocket}")
                     await self.broadcast(
-                        project_id, {"type": "user-left", "username": username}
+                        project_id,
+                        {"type": "user-left", "username": username},
+                        username,
                     )
-                    break
+            if all([save_ws, save_username]):
+                print("deleting user", save_username)
+                li.remove([save_ws, save_username])
+                if len(li) == 0:
+                    print("deleting project", project_id)
+                    del self.project_connected_users[project_id]
+                break
 
     async def number_of_connected_users(self, project_id):
         return len(self.project_connected_users.get(project_id))
 
     async def handle_file_rename(
-        self, project_id: UUID, websocket: WebSocket, data: dict
+        self, project_id: UUID, websocket: WebSocket, data: dict, sender=None
     ):
         await self.rename_file(project_id, data.get("old_name"), data.get("new_name"))
         await self.broadcast(project_id, data)
         print(self.project_data.get(project_id))
 
     async def handle_file_delete(
-        self, project_id: UUID, websocket: WebSocket, data: dict
+        self, project_id: UUID, websocket: WebSocket, data: dict, sender=None
     ):
         await self.delete_file(project_id, data.get("file_name"))
         await self.broadcast(project_id, data)
         print(self.project_data.get(project_id))
 
     async def handle_file_create(
-        self, project_id: UUID, websocket: WebSocket, data: dict
+        self, project_id: UUID, websocket: WebSocket, data: dict, sender=None
     ):
         await self.create_file(
             project_id, data.get("file_name"), data.get("file_content")
@@ -120,7 +130,7 @@ class ConnectionManager:
                 {
                     "name": file.name,
                     "text": file.text,
-                    "timestamp": file.updated_at.timestamp(),
+                    "timestamp": file.updated_at.timestamp() / 1000,
                     "id": file.id,
                 }
             )
@@ -143,31 +153,35 @@ class ConnectionManager:
         await websocket.send_json(message)
 
     async def handle_file_update(
-        self, project_id: UUID, websocket: WebSocket, data: dict
+        self, project_id: UUID, websocket: WebSocket, data: dict, sender=None
     ):
-        file_name = data.get("file")
+        file_name = data.get("file_name")
         new_content = data.get("content")
         timestamp = data.get("timestamp")
-
+        print(f"Received file update: {file_name}")
+        print(f"New content: {new_content}")
+        print(f"Timestamp: {timestamp}")
         # Update the file content in the project data
         files = self.project_data.get(project_id)
         for file in files:
             if file["name"] == file_name:
+                print(files)
                 if (
                     timestamp > file["timestamp"]
                 ):  # Only update if the new change is more recent
                     file["text"] = new_content
                     file["timestamp"] = timestamp
+
                 break
 
         # Broadcast the update to all connected clients
         message = {
             "type": "file-update",
-            "file": file_name,
+            "file_name": file_name,
             "content": new_content,
             "timestamp": timestamp,
         }
-        await self.broadcast(project_id, message)
+        await self.broadcast(project_id, message, sender)
 
     async def handle_save(self, project_id: UUID, session: AsyncSession):
         # get project files
@@ -200,12 +214,14 @@ class ConnectionManager:
 
         print("Project saved")
 
-    async def broadcast(self, project_id: UUID, message: dict):
+    async def broadcast(self, project_id: UUID, message: dict, sender=None):
         """
         Sends a message to all WebSocket connections.
         """
         print(f"Broadcasting: {message}")
-        for ws, _ in self.project_connected_users.get(project_id, [None, None]):
+        for ws, username in self.project_connected_users.get(project_id, [None, None]):
+            if sender is not None and username == sender:
+                continue
             await ws.send_json(message)
 
     def __str__(self) -> str:
