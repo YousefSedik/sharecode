@@ -6,34 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShareCode - Collaborative Code Editor</title>
     <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tailwind.min.css">
     <!-- CodeMirror -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <link rel="stylesheet" href="/static/css/codemirror.min.css">
+    <link rel="stylesheet" href="/static/css/login.css">
+    <script src="/static/js/codemirror.min.js"></script>
+    <script src="/static/js/javascript.min.js"></script>
+    <script src="/static/js/python.min.js"></script>
+    <script src="/static/js/htmlmixed.min.js"></script>
+    <script src="/static/css/css.min.js"></script>
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/all.min.css" rel="stylesheet">
     <style>
         .sidebar {
-        position: fixed; /* Make the sidebar fixed */
-        top: 0; /* Stick to the top */
-        left: 0; /* Stick to the left */
-        height: 100vh; /* Full height of the viewport */
-        width: 16rem; /* Width of the sidebar (64 = 16rem in Tailwind) */
-        overflow-y: auto; /* Allow scrolling within the sidebar if content overflows */
-        z-index: 10; /* Ensure the sidebar stays above other content */
-    }
+            position: fixed;
+            /* Make the sidebar fixed */
+            top: 0;
+            /* Stick to the top */
+            left: 0;
+            /* Stick to the left */
+            height: 100vh;
+            /* Full height of the viewport */
+            width: 16rem;
+            /* Width of the sidebar (64 = 16rem in Tailwind) */
+            overflow-y: auto;
+            /* Allow scrolling within the sidebar if content overflows */
+            z-index: 10;
+            /* Ensure the sidebar stays above other content */
+        }
 
-    .editor {
-        margin-left: 16rem; /* Offset the editor by the width of the sidebar */
-        width: calc(100% - 16rem); /* Adjust the width of the editor */
-        height: 100vh; /* Full height of the viewport */
-        overflow-y: auto; /* Allow scrolling within the editor */
-    }
+        .editor {
+            margin-left: 16rem;
+            /* Offset the editor by the width of the sidebar */
+            width: calc(100% - 16rem);
+            /* Adjust the width of the editor */
+            height: 100vh;
+            /* Full height of the viewport */
+            overflow-y: auto;
+            /* Allow scrolling within the editor */
+        }
+
         .CodeMirror {
             height: 100%;
             font-family: 'JetBrains Mono', monospace;
@@ -63,12 +75,12 @@
 <body class="bg-gray-950 text-gray-100">
     <div class="flex h-screen">
         <button id="sidebar-toggle" class="fixed top-4 left-4 p-2 bg-purple-600 rounded-lg lg:hidden z-20">
-        <i class="fas fa-bars"></i>
+            <i class="fas fa-bars"></i>
         </button>
         <!-- Sidebar -->
-    <div id="sidebar"
-        class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">            
-        <div class="flex items-center space-x-2 mb-6">
+        <div id="sidebar"
+            class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
+            <div class="flex items-center space-x-2 mb-6">
                 <i class="fas fa-code text-purple-500 text-2xl"></i>
                 <h2 class="text-xl font-bold text-purple-500">Share Code </h2>
             </div>
@@ -101,7 +113,7 @@
         </div>
 
         <!-- Editor Area -->
-    <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
+        <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
             <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
                 <div class="flex items-center">
                     <div class="flex space-x-2">
@@ -142,7 +154,6 @@
         const userColors = [
             '#9333ea', // Purple
             '#ec4899', // Pink
-            '#14b8a6', // Teal
             '#f97316', // Orange
             '#8b5cf6', // Violet
         ];
@@ -183,6 +194,7 @@
             activeFile = fileName;
             document.getElementById("file-name").textContent = fileName;
             updateFileTypeBadge(fileName);
+
             codeEditor.setValue(files[fileName]);
             codeEditor.setOption("mode", getFileMode(fileName));
             codeEditor.refresh();
@@ -256,6 +268,7 @@
         function updateUserList() {
             const userList = document.getElementById("user-list");
             userList.innerHTML = "";
+            let i = 0
             Array.from(users).forEach(username => {
                 const li = document.createElement("li");
                 li.className = "flex items-center space-x-2 p-2 rounded-md";
@@ -280,6 +293,9 @@
             const message = JSON.parse(event.data);
             console.log("Received message:", message);
             switch (message.type) {
+                case "access":
+                    updateUIForRole(message.role);
+                    break;
                 case "init-files":
                     updateFileList(message.files);
                     break;
@@ -315,6 +331,9 @@
                     break;
                 case "file-create": // Handle broadcasted file creation
                     handleFileCreate(message.file_name);
+                    break;
+                case "access-denied":
+                    alert("You are not authorized to edit this project.");
                     break;
                 default:
                     console.warn("Unknown message type:", message.type);
@@ -477,7 +496,7 @@
                 updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
             }
         }
-        
+
         function updateFileList(fileData) {
             files = {}; // Reset the files object
             fileData.forEach(file => {
@@ -515,6 +534,28 @@
                 }));
             }
         });
+        function updateUIForRole(role) {
+            const createFileButton = document.getElementById("create-file");
+            const newFileNameInput = document.getElementById("new-file-name");
+
+            if (role === "viewer") {
+                // Disable file creation
+                createFileButton.disabled = true;
+                createFileButton.classList.add("opacity-50", "cursor-not-allowed");
+                newFileNameInput.disabled = true;
+                newFileNameInput.classList.add("opacity-50", "cursor-not-allowed");
+
+                // Disable file editing
+                codeEditor.setOption("readOnly", true);
+            } else {
+                // Enable file creation and editing
+                createFileButton.disabled = false;
+                createFileButton.classList.remove("opacity-50", "cursor-not-allowed");
+                newFileNameInput.disabled = false;
+                newFileNameInput.classList.remove("opacity-50", "cursor-not-allowed");
+                codeEditor.setOption("readOnly", false);
+            }
+        }
     </script>
 </body>
 
