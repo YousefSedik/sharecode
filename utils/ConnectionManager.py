@@ -12,6 +12,8 @@ class ConnectionManager:
         self.project_connected_users: dict[UUID : list[list[WebSocket, str]]] = {}
         # project_id: [{name: str, text: str, timestamp: int}]
         self.project_data: dict[UUID : list[dict]] = defaultdict(lambda: [])
+        # file_id: usernames
+        self.viewing_files: dict[str : list[str]] = defaultdict(lambda: [])
 
     async def connect(self, websocket: WebSocket, username: str, session: AsyncSession):
         """
@@ -71,7 +73,13 @@ class ConnectionManager:
                     print("deleting project", project_id)
                     del self.project_connected_users[project_id]
                 break
-
+    
+    async def notify(self, websocket: WebSocket, message: dict):
+        """
+        Sends a message to a specific WebSocket connection.
+        """
+        await websocket.send_json(message)
+        
     async def number_of_connected_users(self, project_id):
         return len(self.project_connected_users.get(project_id))
 
@@ -229,6 +237,6 @@ class ConnectionManager:
         for project_id, li in self.project_connected_users.items():
             result += f"project_id: {project_id}\n"
             for ws, username in li:
-                result += f"username: {username}\n"
+                result += f"- username: {username}\n"
 
         return result
