@@ -7,6 +7,18 @@
     <title>Project Details</title>
     <script src="/static/js/script.js"></script>
     <style>
+        select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-left: 1rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: #57a5ff;
+        }
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -58,6 +70,9 @@
             padding: 0.8rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .delete-button {
@@ -68,11 +83,11 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-
         }
 
         .back-button,
-        .browse-button {
+        .browse-button,
+        .update-button {
             margin-bottom: 1rem;
             padding: 0.5rem 1rem;
             background-color: #1550f3;
@@ -84,8 +99,72 @@
         }
 
         .back-button:hover,
-        .browse-button:hover {
-            background-color: #57a5ff   ;
+        .browse-button:hover,
+        .update-button:hover {
+            background-color: #57a5ff;
+        }
+
+        .access-control {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .access-control input {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .access-control select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .access-control button {
+            padding: 0.5rem 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .access-control button:hover {
+            background-color: #45a049;
+        }
+
+        .autocomplete-results {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 200px;
+        }
+
+        .autocomplete-results div {
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .autocomplete-results div:hover {
+            background-color: #f1f1f1;
+        }
+
+        .access-control {
+            display: flex;
+            justify-content: center;
+            /* Center horizontally */
+            align-items: center;
+            /* Center vertically */
+            gap: 1rem;
+            /* Space between elements */
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -93,12 +172,12 @@
 <body>
     <div class="navbar">
         <div class="logo">
-            <a href="#">Share Code</a>
+            <a href="/">Share Code</a>
         </div>
         <div class="links">
             <a href="/">Home</a>
-            <a >Projects</a>
-            <a >Profile</a>
+            <a>Projects</a>
+            <a>Profile</a>
             <a href="" onclick="logout()">Logout</a>
             Welcome, <span id="username">
                 <script>
@@ -117,18 +196,22 @@
         <p><strong>Updated At:</strong> <span id="updatedAt"></span></p>
         <p><strong>Your Access Level:</strong> <span id="accessLevel"></span></p>
 
-
         <button class="browse-button" id="browseProject">Browse Project</button>
         <button onclick="deleteProject()" class="delete-button" id="deleteProject">Delete Project</button>
-        <div class="section">
-            <h2>Currently Browsing</h2>
-            <ul id="browsingUsers">
-                <!-- Browsing users will be dynamically populated here -->
-            </ul>
-        </div>
 
         <div class="section">
             <h2>Access List</h2>
+            <div class="access-control">
+                <div style="position: relative;">
+                    <input type="text" id="usernameInput" placeholder="Enter username" oninput="searchUsername()">
+                    <div id="autocompleteResults" class="autocomplete-results" style="display: none;"></div>
+                </div>
+                <select id="accessType">
+                    <option value="VIEW">Read</option>
+                    <option value="FULL_ACCESS">Read/Edit</option>
+                </select>
+                <button onclick="addUserToAccessList()">Add User</button>
+            </div>
             <ul id="accessList">
                 <!-- User access details will be dynamically populated here -->
             </ul>
@@ -145,6 +228,7 @@
     <script>
         // Replace this with the actual project ID
         const projectId = document.location.pathname.split("/").pop();
+
         async function deleteProject() {
             try {
                 const response = await fetch(`/api/project/${projectId}`, {
@@ -155,12 +239,10 @@
                 });
                 if (response.ok) {
                     window.location.href = "/";
-                } 
-                else if (response.status == 401) {
+                } else if (response.status == 401) {
                     localStorage.removeItem("token");
                     window.location.href = "/login";
-                }
-                else {
+                } else {
                     alert("Failed to delete project");
                 }
             } catch (error) {
@@ -168,6 +250,7 @@
                 alert("Unable to delete project. Please try again later.");
             }
         }
+
         async function fetchProjectDetails() {
             try {
                 const response = await fetch(`/api/project/${projectId}`, {
@@ -178,13 +261,15 @@
                 });
                 if (response.ok) {
                     const project = await response.json();
+                    if (project.access_type != "Owner"){
+                        document.getElementById("deleteProject").style.display = "none";
+                        document.getElementsByClassName("access-control")[0].style.display = "none";
+                    }
                     displayProjectDetails(project);
-                } 
-                else if (response.status == 401) {
+                } else if (response.status == 401) {
                     localStorage.removeItem("token");
                     window.location.href = "/login";
-                }
-                else {
+                } else {
                     alert("Failed to fetch project details");
                 }
             } catch (error) {
@@ -202,36 +287,184 @@
             document.getElementById("createdAt").textContent = new Date(project.created_at).toLocaleString();
             document.getElementById("updatedAt").textContent = new Date(project.updated_at).toLocaleString();
             document.getElementById("accessLevel").textContent = project.access_type;
+
             const accessList = document.getElementById("accessList");
+            accessList.innerHTML = ""; // Clear existing list
+
             project.access_list.forEach((access) => {
                 const li = document.createElement("li");
-                li.textContent = `User: ${access.username} (${access.type})`;
+                li.textContent = `User: ${access.username}`;
+                li.setAttribute("data-access-id", access.id);
+
+                // Add a select dropdown for access level
+                const select = document.createElement("select");
+                select.innerHTML = `
+            <option value="VIEW" ${access.type === "VIEW" ? "selected" : ""}>Read</option>
+            <option value="FULL_ACCESS" ${access.type === "FULL_ACCESS" ? "selected" : ""}>Edit</option>
+        `;
+                select.onchange = () => updateUserAccessLevel(access.id, select.value);
+
+                // Add a delete button
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete";
+                deleteButton.style.backgroundColor = "#f44336";
+                deleteButton.style.color = "white";
+                deleteButton.style.border = "none";
+                deleteButton.style.borderRadius = "4px";
+                deleteButton.style.padding = "0.5rem 1rem";
+                deleteButton.style.cursor = "pointer";
+                deleteButton.onclick = () => deleteUserFromAccessList(access.id);
+
+                // Append elements to the list item
+                li.appendChild(select);
+                li.appendChild(deleteButton);
                 accessList.appendChild(li);
             });
 
             const fileList = document.getElementById("fileList");
+            fileList.innerHTML = ""; // Clear existing list
             project.files.forEach((file) => {
                 const li = document.createElement("li");
                 li.textContent = `File: ${file.name}, Created At: ${new Date(file.created_at).toLocaleString()}, Updated At: ${new Date(file.updated_at).toLocaleString()}`;
                 fileList.appendChild(li);
             });
         }
+        async function addUserToAccessList() {
+            const user_id = document.getElementById("usernameInput").getAttribute("user-id");
+            const accessType = document.getElementById("accessType").value;
+            console.log(user_id, accessType);
+            if (!user_id) {
+                return;
+            }
 
-        
+            try {
+                const response = await fetch(`/api/project/${projectId}/access`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `${localStorage.getItem("token")}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ user_id, access_level: accessType }),
+                });
 
-        function updateBrowsingUsers(users) {
-            const browsingUsersList = document.getElementById("browsingUsers");
-            browsingUsersList.innerHTML = ""; // Clear existing list
-
-            users.forEach((user) => {
-                const li = document.createElement("li");
-                li.textContent = `User: ${user.username}`;
-                browsingUsersList.appendChild(li);
-            });
+                if (response.ok) {
+                    fetchProjectDetails(); // Refresh the access list
+                } else if (response.status == 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/login";
+                } else {
+                    data = await response.json()
+                    alert(`${data.detail}`);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Unable to add user to access list. Please try again later.");
+            }
         }
+        async function updateUserAccessLevel(access_id, accessType) {
+            try {
+                const response = await fetch(`/api/project/${projectId}/access`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `${localStorage.getItem("token")}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ access_level: accessType, access_id }),
+                });
+
+                if (response.ok) {
+                    fetchProjectDetails(); // Refresh the access list
+                } else if (response.status == 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/login";
+                } else {
+                    alert("Failed to update access level");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Unable to update access level. Please try again later.");
+            }
+        }
+        async function deleteUserFromAccessList(access_id) {
+            try {
+                console.log(access_id);
+                const response = await fetch(`/api/project/${projectId}/access`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `${localStorage.getItem("token")}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ access_id: access_id }),
+                });
+
+                if (response.ok) {
+                    fetchProjectDetails(); // Refresh the access list
+                } else if (response.status == 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/login";
+                } else {
+                    alert("Failed to delete user from access list");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Unable to delete user from access list. Please try again later.");
+            }
+        }
+
+
+
+        async function searchUsername() {
+            const query = document.getElementById("usernameInput").value;
+            if (query.length < 2) {
+                document.getElementById("autocompleteResults").style.display = "none";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/search-username?q=${query}`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `${localStorage.getItem("token")}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const usernames = await response.json();
+                    const resultsContainer = document.getElementById("autocompleteResults");
+                    resultsContainer.innerHTML = "";
+
+                    usernames.forEach((username) => {
+                        const div = document.createElement("div");
+                        div.textContent = username.username;
+
+                        div.onclick = () => {
+                            document.getElementById("usernameInput").value = username.username;
+                            document.getElementById("usernameInput").setAttribute("user-id", username.id);
+                            resultsContainer.style.display = "none";
+                        };
+                        resultsContainer.appendChild(div);
+                    });
+
+                    if (usernames.length > 0) {
+                        resultsContainer.style.display = "block";
+                    } else {
+                        resultsContainer.style.display = "none";
+                    }
+                } else if (response.status == 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/login";
+                } else {
+                    console.error("Failed to fetch usernames");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
         function browseProject() {
             window.location.href = `/project/${projectId}/browse`;
         }
+
         // Attach event listener to "Browse Project" button
         document.getElementById("browseProject").addEventListener("click", browseProject);
 

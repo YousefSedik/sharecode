@@ -116,7 +116,7 @@
         <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
             <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
                 <div class="flex items-center">
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2" name="file-actions">
                         <button id="save-project" class="p-2 hover:bg-gray-800 rounded-md transition-colors">
                             <i class="fas fa-save"></i>
                             |
@@ -133,6 +133,7 @@
     </div>
 
     <script>
+        userMode = null;
         document.getElementById("sidebar-toggle").addEventListener("click", () => {
             const sidebar = document.getElementById("sidebar");
             sidebar.classList.toggle("-translate-x-full");
@@ -226,22 +227,31 @@
                    flex justify-between items-center`;
 
             const fileIcon = getFileIcon(fileName);
-            li.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <i class="${fileIcon} text-gray-400"></i>
-            <span>${fileName}</span>
-        </div>
-        <div class="flex space-x-2">
-            <button onclick="renameFile('${fileName}')" 
-                    class="p-1 text-gray-400 hover:text-purple-500 transition-colors">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button onclick="deleteFile('${fileName}')"
-                    class="p-1 text-gray-400 hover:text-red-500 transition-colors">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
+            fileItem = `
+                <div class="flex items-center space-x-2">
+                    <i class="${fileIcon} text-gray-400"></i>
+                    <span>${fileName}</span>
+                </div>
+                <div class="flex space-x-2" name="file-actions">
+                    <button onclick="renameFile('${fileName}')" 
+                            class="p-1 text-gray-400 hover:text-purple-500 transition-colors">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteFile('${fileName}')"
+                            class="p-1 text-gray-400 hover:text-red-500 transition-colors">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+
+            `;
+            if (userMode === "read") {
+                fileItem = `<div class="flex items-center space-x-2">
+                <i class="${fileIcon} text-gray-400"></i>
+                <span>${fileName}</span>
+                </div>
+                `;
+            }
+            li.innerHTML = fileItem;
 
             li.addEventListener("click", (e) => {
                 if (!e.target.closest('button')) {
@@ -328,6 +338,19 @@
                 case "file-create": // Handle broadcasted file creation
                     handleFileCreate(message.file_name);
                     break;
+                case "access":
+                    userMode = message.role;
+                    if (userMode === "view"){
+                        var elements = document.getElementsByName("file-actions");
+                        for (var i = 0; i < elements.length; i++) {
+                            console.log(elements[i]);
+                            elements[i].style.display = "none";
+                        }
+                        document.getElementById("create-file").style.display = "none";
+                        document.getElementById("new-file-name").style.display = "none";
+                        codeEditor.setOption("readOnly", true);
+                    }
+                    break;
                 default:
                     console.warn("Unknown message type:", message.type);
             }
@@ -378,9 +401,9 @@
             Object.keys(files).forEach(fileName => {
                 const li = document.createElement("li");
                 li.className = `p-2 rounded ${activeFile === fileName ? "bg-blue-600" : "hover:bg-gray-700"} flex justify-between items-center`;
-                li.innerHTML = `
+                file = `
                     <span>${fileName}</span>
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2" name="file-actions">
                         <button onclick="renameFile('${fileName}')" class="p-1 text-sm text-yellow-400 hover:text-yellow-500">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -389,6 +412,12 @@
                         </button>
                     </div>
                 `;
+                if (userMode === "read") {
+                    file = `
+                        <span>${fileName}</span>
+                    `;
+                }
+                li.innerHTML = file;
                 li.addEventListener("click", () => loadFile(fileName));
                 fileList.appendChild(li);
             });

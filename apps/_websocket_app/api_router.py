@@ -25,10 +25,9 @@ async def websocket_endpoint(
     )
     if not has_access:
         return
-    print("User has access to the project", access)
     await manager.connect(websocket, username, session)
     try:
-        print(manager)
+        await manager.notify(websocket, {"type": "access", "role": access})
         while True:
             obj = await websocket.receive_text()
             try:
@@ -38,8 +37,10 @@ async def websocket_endpoint(
                 continue
             print(f"Received obj: {obj}")
             type = obj.get("type", "")
+            if access == "view":
+                await manager.notify(websocket, {"type": "access-denied"})
+                continue
             if type == "file-update":
-                print(username)
                 await manager.handle_file_update(project_id, websocket, obj, username)
             elif type == "file-rename":
                 await manager.handle_file_rename(project_id, websocket, obj, username)
