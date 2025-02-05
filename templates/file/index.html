@@ -19,21 +19,33 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         .sidebar {
-        position: fixed; /* Make the sidebar fixed */
-        top: 0; /* Stick to the top */
-        left: 0; /* Stick to the left */
-        height: 100vh; /* Full height of the viewport */
-        width: 16rem; /* Width of the sidebar (64 = 16rem in Tailwind) */
-        overflow-y: auto; /* Allow scrolling within the sidebar if content overflows */
-        z-index: 10; /* Ensure the sidebar stays above other content */
-    }
+            position: fixed;
+            /* Make the sidebar fixed */
+            top: 0;
+            /* Stick to the top */
+            left: 0;
+            /* Stick to the left */
+            height: 100vh;
+            /* Full height of the viewport */
+            width: 16rem;
+            /* Width of the sidebar (64 = 16rem in Tailwind) */
+            overflow-y: auto;
+            /* Allow scrolling within the sidebar if content overflows */
+            z-index: 10;
+            /* Ensure the sidebar stays above other content */
+        }
 
-    .editor {
-        margin-left: 16rem; /* Offset the editor by the width of the sidebar */
-        width: calc(100% - 16rem); /* Adjust the width of the editor */
-        height: 100vh; /* Full height of the viewport */
-        overflow-y: auto; /* Allow scrolling within the editor */
-    }
+        .editor {
+            margin-left: 16rem;
+            /* Offset the editor by the width of the sidebar */
+            width: calc(100% - 16rem);
+            /* Adjust the width of the editor */
+            height: 100vh;
+            /* Full height of the viewport */
+            overflow-y: auto;
+            /* Allow scrolling within the editor */
+        }
+
         .CodeMirror {
             height: 100%;
             font-family: 'JetBrains Mono', monospace;
@@ -63,12 +75,12 @@
 <body class="bg-gray-950 text-gray-100">
     <div class="flex h-screen">
         <button id="sidebar-toggle" class="fixed top-4 left-4 p-2 bg-purple-600 rounded-lg lg:hidden z-20">
-        <i class="fas fa-bars"></i>
+            <i class="fas fa-bars"></i>
         </button>
         <!-- Sidebar -->
-    <div id="sidebar"
-        class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">            
-        <div class="flex items-center space-x-2 mb-6">
+        <div id="sidebar"
+            class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
+            <div class="flex items-center space-x-2 mb-6">
                 <i class="fas fa-code text-purple-500 text-2xl"></i>
                 <h2 class="text-xl font-bold text-purple-500">Share Code </h2>
             </div>
@@ -101,10 +113,10 @@
         </div>
 
         <!-- Editor Area -->
-    <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
+        <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
             <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
                 <div class="flex items-center">
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2" name="file-actions">
                         <button id="save-project" class="p-2 hover:bg-gray-800 rounded-md transition-colors">
                             <i class="fas fa-save"></i>
                             |
@@ -121,6 +133,7 @@
     </div>
 
     <script>
+        userMode = null;
         document.getElementById("sidebar-toggle").addEventListener("click", () => {
             const sidebar = document.getElementById("sidebar");
             sidebar.classList.toggle("-translate-x-full");
@@ -214,22 +227,31 @@
                    flex justify-between items-center`;
 
             const fileIcon = getFileIcon(fileName);
-            li.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <i class="${fileIcon} text-gray-400"></i>
-            <span>${fileName}</span>
-        </div>
-        <div class="flex space-x-2">
-            <button onclick="renameFile('${fileName}')" 
-                    class="p-1 text-gray-400 hover:text-purple-500 transition-colors">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button onclick="deleteFile('${fileName}')"
-                    class="p-1 text-gray-400 hover:text-red-500 transition-colors">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
+            fileItem = `
+                <div class="flex items-center space-x-2">
+                    <i class="${fileIcon} text-gray-400"></i>
+                    <span>${fileName}</span>
+                </div>
+                <div class="flex space-x-2" name="file-actions">
+                    <button onclick="renameFile('${fileName}')" 
+                            class="p-1 text-gray-400 hover:text-purple-500 transition-colors">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteFile('${fileName}')"
+                            class="p-1 text-gray-400 hover:text-red-500 transition-colors">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+
+            `;
+            if (userMode === "read") {
+                fileItem = `<div class="flex items-center space-x-2">
+                <i class="${fileIcon} text-gray-400"></i>
+                <span>${fileName}</span>
+                </div>
+                `;
+            }
+            li.innerHTML = fileItem;
 
             li.addEventListener("click", (e) => {
                 if (!e.target.closest('button')) {
@@ -316,6 +338,19 @@
                 case "file-create": // Handle broadcasted file creation
                     handleFileCreate(message.file_name);
                     break;
+                case "access":
+                    userMode = message.role;
+                    if (userMode === "view"){
+                        var elements = document.getElementsByName("file-actions");
+                        for (var i = 0; i < elements.length; i++) {
+                            console.log(elements[i]);
+                            elements[i].style.display = "none";
+                        }
+                        document.getElementById("create-file").style.display = "none";
+                        document.getElementById("new-file-name").style.display = "none";
+                        codeEditor.setOption("readOnly", true);
+                    }
+                    break;
                 default:
                     console.warn("Unknown message type:", message.type);
             }
@@ -366,9 +401,9 @@
             Object.keys(files).forEach(fileName => {
                 const li = document.createElement("li");
                 li.className = `p-2 rounded ${activeFile === fileName ? "bg-blue-600" : "hover:bg-gray-700"} flex justify-between items-center`;
-                li.innerHTML = `
+                file = `
                     <span>${fileName}</span>
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2" name="file-actions">
                         <button onclick="renameFile('${fileName}')" class="p-1 text-sm text-yellow-400 hover:text-yellow-500">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -377,6 +412,12 @@
                         </button>
                     </div>
                 `;
+                if (userMode === "read") {
+                    file = `
+                        <span>${fileName}</span>
+                    `;
+                }
+                li.innerHTML = file;
                 li.addEventListener("click", () => loadFile(fileName));
                 fileList.appendChild(li);
             });
@@ -477,7 +518,7 @@
                 updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
             }
         }
-        
+
         function updateFileList(fileData) {
             files = {}; // Reset the files object
             fileData.forEach(file => {
