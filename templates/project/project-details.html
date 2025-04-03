@@ -638,11 +638,13 @@
                 if (project.access_level === "FULL_ACCESS") {
                     accessLevel.textContent = "Full Access";
                     accessLevel.className = "access-badge edit";
-                } else {
+                } else if (project.access_level === "VIEW") {
                     accessLevel.textContent = "Read Only";
                     accessLevel.className = "access-badge read";
+                } else {
+                    accessLevel.textContent = "Owner";
+                    accessLevel.className = "access-badge edit";
                 }
-
                 // Show/hide delete button based on permissions
                 if (project.access_level !== "FULL_ACCESS") {
                     document.getElementById("deleteProject").style.display = "none";
