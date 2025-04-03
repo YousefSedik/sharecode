@@ -1,100 +1,271 @@
 <!DOCTYPE html>
-<!-- Source Codes By CodingNepal - www.codingnepalweb.com -->
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login </title>
-  <link rel="stylesheet" href="../static/css/login.css" />
+  <title>Login</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --error: #dc2626;
+      --gray-light: #f3f4f6;
+      --gray-dark: #6b7280;
+      --white: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--gray-light);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 400px;
+      padding: 2.5rem;
+    }
+
+    .login-card h3 {
+      color: #111827;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 0.9375rem;
+      transition: all 0.2s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .forgot-password {
+      display: block;
+      text-align: right;
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--gray-dark);
+      text-decoration: none;
+    }
+
+    .forgot-password:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.2s;
+    }
+
+    .login-btn:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+
+    .signup-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--gray-dark);
+      font-size: 0.875rem;
+    }
+
+    .signup-link a {
+      color: var(--primary);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+
+    .error-message {
+      color: var(--error);
+      font-size: 0.8125rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    /* Loading state */
+    .btn-loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      width: 1.25rem;
+      height: 1.25rem;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    /* Error shake animation */
+    .shake {
+      animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20%,
+      60% {
+        transform: translateX(-5px);
+      }
+
+      40%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <script src="/static/js/script.js"></script>
+  <div class="login-card">
+    <form onsubmit="login(event)">
+      <h3>Log in to your account</h3>
+
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter your username" required />
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required />
+        <a href="#" class="forgot-password">Forgot password?</a>
+      </div>
+
+      <div id="errorMessage" class="error-message"></div>
+
+      <button type="submit" id="loginBtn" class="login-btn">Log in</button>
+
+      <p class="signup-link">Don't have an account? <a href="/sign-up">Sign up</a></p>
+    </form>
+  </div>
 
   <script>
-    redirectToDashboard(); 
     async function login(event) {
-        event.preventDefault(); // Prevent the form from reloading the page
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      event.preventDefault();
+
+      const loginBtn = document.getElementById('loginBtn');
+      const errorMessage = document.getElementById('errorMessage');
+      const loginCard = document.querySelector('.login-card');
+
+      // Clear previous errors
+      errorMessage.style.display = 'none';
+      errorMessage.textContent = '';
+
+      // Show loading state
+      loginBtn.classList.add('btn-loading');
+
       try {
-        const formdata = new FormData();
-        formdata.append("username", username);
-        formdata.append("password", password);
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const formData = new FormData();
+        formData.append("username", username);
+        formData.append("password", password);
 
         const response = await fetch("/api/token", {
           method: "POST",
-          body: formdata  // Use 'body' for FormData instead of 'data'
+          body: formData
         });
 
         if (response.ok) {
           const data = await response.json();
           localStorage.setItem("token", `${data.token_type} ${data.access_token}`);
-          window.location.href = "/"; // Redirect to another page
+
+          // Smooth redirect after a brief delay
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 300);
+
         } else {
-          // Get the error message from the response body
           const errorData = await response.json();
-          const errorMessage = errorData.detail || "Login failed. Please check your credentials.";
-          displayError([errorMessage]);  // Pass the error message as an array
+          const message = errorData.detail || "Login failed. Please check your credentials.";
+
+          // Show error
+          errorMessage.textContent = message;
+          errorMessage.style.display = 'block';
+          loginCard.classList.add('shake');
+          setTimeout(() => loginCard.classList.remove('shake'), 400);
         }
       } catch (error) {
-        displayError(["An error occurred. Please try again later."]);
-      }
-
-      // Function to display the error messages
-      function displayError(messages) {
-        const messagesClass = document.querySelector(".error");
-        messagesClass.innerHTML = "";  // Clear any previous messages
-
-        // Append each error message as a list item
-        messages.forEach(message => {
-          const listItem = document.createElement("li");
-          listItem.textContent = message;
-          messagesClass.appendChild(listItem);
-        });
-
-        messagesClass.style.display = "block";  // Make sure the error messages are visible
+        errorMessage.textContent = "An error occurred. Please try again.";
+        errorMessage.style.display = 'block';
+        loginCard.classList.add('shake');
+        setTimeout(() => loginCard.classList.remove('shake'), 400);
+      } finally {
+        loginBtn.classList.remove('btn-loading');
       }
     }
-
-      function togglePasswordVisibility() {
-        const passwordInput = document.getElementById("id_password");
-        const type = passwordInput.type === "password" ? "text" : "password";
-        passwordInput.type = type;
-      }
   </script>
-  <div class="login_form">
-    <!-- Login form container -->
-    <form onsubmit="login(event)">
-      <h3>Log in </h3>
-      <br>
-      <div class="messages"style="padding: 10px; color: red;">
-        <ul class="error">
-          <!-- Error messages will be appended here -->
-        </ul>
-      </div>
-      <!-- Email input box -->
-      <div class="input_box">
-        <label for="username">Username</label>
-        <input  type="username" id="username" placeholder="Enter Username" required />
-      </div>
-
-      <!-- Paswwrod input box -->
-      <div class="input_box">
-        <div class="password_title">
-          <label for="password">Password</label>
-          <a href="#">Forgot Password?</a>
-        </div>
-
-        <input  type="password" id="password" placeholder="Enter your password" required />
-      </div>
-
-      <!-- Login button -->
-      <button type="submit">Log In</button>
-      <p class="sign_up">Don't have an account? <a href="/sign-up">Sign up</a></p>
-    </form>
-  </div>
 </body>
 
 </html>

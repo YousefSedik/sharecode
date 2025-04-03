@@ -236,7 +236,6 @@ async def grant_access(
     try:
         await session.commit()
     except IntegrityError as e:
-        print(e)
         raise HTTPException(status_code=400, detail="Access already granted")
 
     await session.refresh(project_access)

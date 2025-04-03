@@ -1,112 +1,283 @@
 <!DOCTYPE html>
-<!-- Source Codes By CodingNepal - www.codingnepalweb.com -->
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign Up </title>
-    <link rel="stylesheet" href="../static/css/login.css" />
+    <title>Sign Up</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --error: #dc2626;
+            --gray-light: #f3f4f6;
+            --gray-dark: #6b7280;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--gray-light);
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+        }
+
+        .signup-card {
+            background: var(--white);
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+        }
+
+        .signup-card h3 {
+            color: #111827;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .signup-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .signup-btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--gray-dark);
+            font-size: 0.875rem;
+        }
+
+        .login-link a {
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.8125rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* Loading state */
+        .btn-loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* Error shake animation */
+        .shake {
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-5px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <div class="signup-card">
+        <form onsubmit="signup(event)">
+            <h3>Create your account</h3>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <div class="input-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" placeholder="Enter your first name" required />
+            </div>
+
+            <div class="input-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" placeholder="Enter your last name" required />
+            </div>
+
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Choose a username" required />
+            </div>
+
+            <div class="input-group">
+                <label for="password1">Password</label>
+                <input type="password" id="password1" placeholder="Create a password" required />
+            </div>
+
+            <div class="input-group">
+                <label for="password2">Confirm Password</label>
+                <input type="password" id="password2" placeholder="Confirm your password" required />
+            </div>
+
+            <button type="submit" id="signupBtn" class="signup-btn">Sign Up</button>
+
+            <p class="login-link">Already have an account? <a href="/login">Log in</a></p>
+        </form>
+    </div>
+
     <script>
         async function signup(event) {
-            event.preventDefault(); // Prevent the form from reloading the page
-            const username = document.getElementById("username").value;
-            const password1 = document.getElementById("password1").value;
-            const password2 = document.getElementById("password2").value;
-            const first_name = document.getElementById("first_name").value;
-            const last_name= document.getElementById("last_name").value;
+            event.preventDefault();
+
+            const signupBtn = document.getElementById('signupBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const signupCard = document.querySelector('.signup-card');
+
+            // Clear previous errors
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = '';
+
+            // Show loading state
+            signupBtn.classList.add('btn-loading');
+
             try {
+                const username = document.getElementById("username").value;
+                const password1 = document.getElementById("password1").value;
+                const password2 = document.getElementById("password2").value;
+                const first_name = document.getElementById("first_name").value;
+                const last_name = document.getElementById("last_name").value;
+
                 const response = await fetch("/api/register", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ username: username, password1: password1, password2: password2, first_name: first_name, last_name: last_name }), // Use 'body' instead of 'data'
+                    body: JSON.stringify({
+                        username: username,
+                        password1: password1,
+                        password2: password2,
+                        first_name: first_name,
+                        last_name: last_name
+                    }),
                 });
+
                 if (response.ok) {
-                    alert("Account Created Successfully");
-                    window.location.href = "/login"; // Redirect to another page
+                    // Show success message and redirect
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 300);
+
                 } else {
                     if (response.status == 400) {
                         const errorData = await response.json();
-                        const errorMessages = errorData.detail || ["Signup failed."];
-                        displayError(errorMessages);
+                        const messages = errorData.detail || ["Signup failed."];
 
+                        // Show errors
+                        errorMessage.innerHTML = messages.map(msg => `<div>${msg}</div>`).join('');
+                        errorMessage.style.display = 'block';
+                        signupCard.classList.add('shake');
+                        setTimeout(() => signupCard.classList.remove('shake'), 400);
                     } else {
-                        displayError(["An error occurred. Please try again."]);
+                        errorMessage.textContent = "An error occurred. Please try again.";
+                        errorMessage.style.display = 'block';
+                        signupCard.classList.add('shake');
+                        setTimeout(() => signupCard.classList.remove('shake'), 400);
                     }
                 }
             } catch (error) {
-                displayError(["An error occurred. Please try again later."]);
+                errorMessage.textContent = "An error occurred. Please try again later.";
+                errorMessage.style.display = 'block';
+                signupCard.classList.add('shake');
+                setTimeout(() => signupCard.classList.remove('shake'), 400);
+            } finally {
+                signupBtn.classList.remove('btn-loading');
             }
         }
-        function displayError(messages) {
-            const messagesClass = document.querySelector(".error");
-            messagesClass.innerHTML = "";  // Clear any previous messages
-            for (const message of messages) {
-                const listItem = document.createElement("li");
-                listItem.textContent = message;
-                messagesClass.appendChild(listItem);
-            }
-            messagesClass.style.display = "block";  // Make sure the error messages are visible
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById("id_password");
-            const type = passwordInput.type === "password" ? "text" : "password";
-            passwordInput.type = type;
-        }
-    }
     </script>
-    <div class="login_form">
-        <!-- Login form container -->
-        <form onsubmit="signup(event)">
-            <h3>Sign Up Now </h3>
-            <br>
-            <div class="messages" style="padding: 10px; color: red;">
-                <ul class="error">
-                    <!-- Error messages will be appended here -->
-                </ul>
-            </div>
-            <!-- Email input box -->
-            <div class="input_box">
-                <label for="first_name">First Name </label>
-                <input  type="text" id="first_name" placeholder="Enter First Name" required />
-            </div>
-
-            <div class="input_box">
-                <label for="last_name">Last Name</label>
-                <input type="text" id="last_name" placeholder="Enter Last Name" required />
-            </div>
-
-            <div class="input_box">
-                <label for="username">Username</label>
-                <input  type="username" id="username" placeholder="Enter Username" required />
-            </div>
-
-            <!-- Paswwrod input box -->
-            <div class="input_box">
-                <div class="password_title">
-                    <label for="password">Password</label>
-                </div>
-
-                <input type="password" id="password1" placeholder="Enter your password" required />
-            </div>
-            <div class="input_box">
-                <div class="password_title">
-                    <label for="password">Confirm Your Password</label>
-                </div>
-            
-                <input type="password" id="password2" placeholder="Confirm your password" required />
-            </div>
-
-            <!-- Login button -->
-            <button type="submit">Sign Up</button>
-
-            <p class="sign_up">Already have an account? <a href="/login">Login </a></p>
-        </form>
-    </div>
 </body>
 
 </html>

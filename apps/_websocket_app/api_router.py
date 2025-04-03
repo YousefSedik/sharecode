@@ -33,9 +33,7 @@ async def websocket_endpoint(
             try:
                 obj = json.loads(obj)
             except json.JSONDecodeError as e:
-                print("Received data is not a json object: ", e)
                 continue
-            print(f"Received obj: {obj}")
             type = obj.get("type", "")
             if access == "view":
                 await manager.notify(websocket, {"type": "access-denied"})
@@ -50,8 +48,6 @@ async def websocket_endpoint(
                 await manager.handle_file_create(project_id, websocket, obj, username)
             elif type == "save-project":
                 await manager.handle_save(project_id, session)
-            print(manager)
-
+ 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
-        print("Client disconnected")
