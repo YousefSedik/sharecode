@@ -34,24 +34,24 @@ app.mount(
     "/static", StaticFiles(directory="static"), name="static"
 )
 
-admin = Admin(app, engine)
+# admin = Admin(app, engine)
 
 
-class UserAdmin(ModelView, model=User):
-    column_list = [User.id, User.username, User.first_name, User.last_name]
+# class UserAdmin(ModelView, model=User):
+#     column_list = [User.id, User.username, User.first_name, User.last_name]
 
-class ProjectAdmin(ModelView, model=Project):
-    column_list = [Project.id, Project.name, Project.description]
+# class ProjectAdmin(ModelView, model=Project):
+#     column_list = [Project.id, Project.name, Project.description]
 
-class FileAdmin(ModelView, model=File):
-    column_list = [File.id, File.name, File.created_at, File.updated_at]
-class ProjectAccessAdmin(ModelView, model=ProjectAccess):
-    column_list = [ProjectAccess.id, ProjectAccess.project_id, ProjectAccess.type, ProjectAccess.user_id]
+# class FileAdmin(ModelView, model=File):
+#     column_list = [File.id, File.name, File.created_at, File.updated_at]
+# class ProjectAccessAdmin(ModelView, model=ProjectAccess):
+#     column_list = [ProjectAccess.id, ProjectAccess.project_id, ProjectAccess.type, ProjectAccess.user_id]
 
-admin.add_view(UserAdmin)
-admin.add_view(ProjectAdmin)
-admin.add_view(ProjectAccessAdmin)
-admin.add_view(FileAdmin)
+# admin.add_view(UserAdmin)
+# admin.add_view(ProjectAdmin)
+# admin.add_view(ProjectAccessAdmin)
+# admin.add_view(FileAdmin)
 
 origins = [
     "http://localhost",
