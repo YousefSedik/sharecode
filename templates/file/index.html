@@ -465,7 +465,6 @@
         function handleWebSocketMessage(event) {
             try {
                 const message = JSON.parse(event.data);
-                console.log("WS Received:", message); // Log for debugging
 
                 switch (message.type) {
                     case "init-files":
@@ -547,7 +546,6 @@
 
                     case "access": // Handle user permissions
                         userMode = message.role; // Expecting 'edit' or 'view'
-                        console.log(`Access level set to: ${userMode}`);
                         configureUIAccess();
                         updateFileListUI(); // Re-render file list to show/hide actions
                         break;
@@ -588,7 +586,6 @@
             }
 
             // File list item actions are handled during creation/update in createFileListItem/updateFileListUI
-            console.log(`UI configured for ${isViewMode ? 'view' : 'edit'} mode.`);
         }
 
 
@@ -678,7 +675,6 @@
 
         function saveProject() {
             if (userMode === 'view') return;
-            console.log("Sending save-project request...");
             sendWebSocketMessage({ type: "save-project" });
             showNotification("Project save request sent.", 'info'); // Server should confirm actual save
         }
@@ -688,12 +684,10 @@
         // WebSocket Events
         if (webSocket) {
             webSocket.onopen = () => {
-                console.log("WebSocket connection established.");
                 showNotification("Connected to project!", "success");
                 // Connection is open, server should send initial state (files, users, access)
             };
             webSocket.onclose = (event) => {
-                console.log("WebSocket connection closed.", event.reason);
                 showNotification("Connection lost. Please refresh.", "error");
                 // Implement reconnection logic if desired
             };

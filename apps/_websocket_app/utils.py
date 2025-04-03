@@ -5,7 +5,6 @@ from apps.auth_app.utils import validate_jwt
 
 async def has_access_to_project(project_id, token, session, websocket):
     if token is None:
-        print("Token is missing")
         await websocket.close()
         return False, None
     username = validate_jwt(token)
@@ -14,7 +13,6 @@ async def has_access_to_project(project_id, token, session, websocket):
     project = await session.get(Project, project_id)
     access = None
     if project is None:
-        print("Project not found")
         await websocket.close()
         return False, None
     else:
@@ -31,7 +29,6 @@ async def has_access_to_project(project_id, token, session, websocket):
             )
             project_access = result.scalars().first()
             if project_access is None:
-                print("User has no access to the project")
                 await websocket.close()
                 return
             elif project_access.type == "VIEW":
@@ -40,7 +37,6 @@ async def has_access_to_project(project_id, token, session, websocket):
                 access = "read/write"
 
         if access is None:
-            print("User has no access to the project")
             await websocket.close()
             return False, None
 
