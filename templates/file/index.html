@@ -4,558 +4,812 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShareCode - Collaborative Code Editor</title>
-    <!-- Tailwind CSS -->
+    <title>ShareCode Pro - Collaborative Code Editor</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material-darker.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/selection/active-line.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
-    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
-        .sidebar {
-            position: fixed;
-            /* Make the sidebar fixed */
-            top: 0;
-            /* Stick to the top */
-            left: 0;
-            /* Stick to the left */
-            height: 100vh;
-            /* Full height of the viewport */
-            width: 16rem;
-            /* Width of the sidebar (64 = 16rem in Tailwind) */
-            overflow-y: auto;
-            /* Allow scrolling within the sidebar if content overflows */
-            z-index: 10;
-            /* Ensure the sidebar stays above other content */
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-        .editor {
-            margin-left: 16rem;
-            /* Offset the editor by the width of the sidebar */
-            width: calc(100% - 16rem);
-            /* Adjust the width of the editor */
-            height: 100vh;
-            /* Full height of the viewport */
-            overflow-y: auto;
-            /* Allow scrolling within the editor */
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Using a common sans-serif font for UI */
         }
 
         .CodeMirror {
             height: 100%;
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
+            background-color: #1f2937;
+            /* Slightly lighter dark background for editor */
         }
 
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #111827;
+            /* Darker track */
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #4a4a4a;
+            background: #4b5563;
+            /* Gray thumb */
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #606060;
+            background: #6b7280;
+            /* Lighter gray on hover */
+        }
+
+        /* Sidebar specific transition */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+
+        /* Subtle button focus rings */
+        button:focus,
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.5);
+            /* Subtle purple focus ring */
+        }
+
+        /* Line Limit Notification Placeholder - initially hidden */
+        #line-limit-notification {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ef4444;
+            /* Red */
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            z-index: 50;
+            /* Ensure it's above the editor */
+            display: none;
+            /* Initially hidden */
+            transition: opacity 0.3s ease-in-out;
         }
     </style>
 </head>
 
-<body class="bg-gray-950 text-gray-100">
-    <div class="flex h-screen">
-        <button id="sidebar-toggle" class="fixed top-4 left-4 p-2 bg-purple-600 rounded-lg lg:hidden z-20">
+<body class="bg-gray-900 text-gray-200 h-screen overflow-hidden">
+    <div class="flex h-full">
+        <button id="sidebar-toggle"
+            class="fixed top-4 left-4 p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg lg:hidden z-30 shadow-md transition-colors">
             <i class="fas fa-bars"></i>
         </button>
-        <!-- Sidebar -->
-        <div id="sidebar"
-            class="fixed lg:static h-screen w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col overflow-y-auto z-10 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
-            <div class="flex items-center space-x-2 mb-6">
-                <i class="fas fa-code text-purple-500 text-2xl"></i>
-                <h2 class="text-xl font-bold text-purple-500">Share Code </h2>
-            </div>
 
-            <div class="flex flex-col space-y-2">
-                <div class="relative">
-                    <input id="new-file-name" type="text" placeholder="New file name" class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md
-                                  focus:outline-none focus:border-purple-500 transition-colors">
+        <aside id="sidebar" class="fixed lg:static h-full w-64 bg-gray-800 border-r border-gray-700 p-4 flex flex-col z-20
+                  transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="flex items-center space-x-3 mb-6 border-b border-gray-700 pb-3">
+                <i class="fas fa-share-alt text-purple-500 text-2xl"></i>
+                <h1 class="text-xl font-bold text-purple-400">ShareCode</h1>
+            </div>
+            <div class="mb-4 px-1"> <a href="/"
+                    class="flex items-center justify-center w-full p-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition-colors duration-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Return Home </a>
+            </div>
+            <div class="mb-6 create-file-section">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase mb-2">New File</h3>
+                <div class="flex flex-col space-y-2">
+                    <input id="new-file-name" type="text" placeholder="e.g., script.js"
+                        class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-sm placeholder-gray-400 focus:border-purple-500 transition-colors">
+                    <button id="create-file"
+                        class="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors duration-200 flex items-center justify-center text-sm shadow-sm">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create File
+                    </button>
                 </div>
-                <button id="create-file" class="p-2 bg-purple-600 hover:bg-purple-700 rounded-md
-                               transition-colors duration-200 flex items-center justify-center">
-                    <i class="fas fa-plus mr-2"></i>
-                    Create File
-                </button>
             </div>
 
-            <div class="mt-6">
-                <h3 class="text-sm font-semibold text-gray-400 mb-2">Files</h3>
-                <ul id="file-list" class="space-y-1 overflow-y-auto">
-                    <!-- Files will be dynamically added here -->
+
+            <div class="flex-grow overflow-y-auto mb-4">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase mb-2">Project Files</h3>
+                <ul id="file-list" class="space-y-1">
+                    <li class="text-gray-500 text-sm italic p-2">No files yet...</li>
                 </ul>
             </div>
 
-            <div class="mt-auto pt-4 border-t border-gray-800">
-                <h3 class="text-sm font-semibold text-gray-400 mb-2">Collaborators</h3>
-                <ul id="user-list" class="space-y-2">
-                    <!-- Online users will be dynamically added here -->
+            <div class="mt-auto pt-4 border-t border-gray-700">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase mb-2">Collaborators</h3>
+                <ul id="user-list" class="space-y-2 max-h-32 overflow-y-auto">
+                    <li class="text-gray-500 text-sm italic">No collaborators yet...</li>
                 </ul>
             </div>
-        </div>
+        </aside>
 
-        <!-- Editor Area -->
-        <div class="flex-1 bg-gray-950 flex flex-col overflow-y-auto">
-            <div class="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="flex space-x-2" name="file-actions">
-                        <button id="save-project" class="p-2 hover:bg-gray-800 rounded-md transition-colors">
-                            <i class="fas fa-save"></i>
-                            |
-                        </button>
-                    </div>
-                    <h3 id="file-name" class="text-lg font-semibold">Untitled</h3>
-                    <span id="file-type" class="ml-2 px-2 py-1 text-xs bg-gray-800 rounded-md text-gray-400"></span>
+        <main class="flex-1 flex flex-col bg-gray-900 overflow-hidden">
+            <header class="p-3 bg-gray-800 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <span id="file-icon" class="text-gray-400"><i class="fas fa-file"></i></span>
+                    <h2 id="file-name" class="text-lg font-semibold text-gray-100">Untitled</h2>
+                    <span id="file-type"
+                        class="ml-2 px-2 py-0.5 text-xs bg-gray-700 rounded-full text-purple-300 font-medium"></span>
                 </div>
-            </div>
-            <div id="editor-wrapper" class="flex-1 relative">
+                <div class="flex items-center space-x-2 editor-actions">
+                    <span id="line-count-display" class="text-sm text-gray-400 mr-2">Lines: 0</span>
+                    <button id="save-project" title="Save project state (server-side)"
+                        class="p-2 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                        <i class="fas fa-save"></i> Save Project
+                    </button>
+                </div>
+            </header>
+
+            <div id="editor-wrapper" class="flex-1 relative bg-gray-900">
                 <textarea id="code-editor"></textarea>
+                <div id="line-limit-notification">Line limit reached!</div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        userMode = null;
-        document.getElementById("sidebar-toggle").addEventListener("click", () => {
-            const sidebar = document.getElementById("sidebar");
-            sidebar.classList.toggle("-translate-x-full");
-        });
-        // WebSocket Initialization
-        const domain = window.location.host;
-        const protocol = window.location.protocol;
-        const projectId = window.location.pathname.split("/")[2];
-        const token = localStorage.getItem("token");
-
-        const wsUrl = `${protocol === "https:" ? "wss://" : "ws://"}${domain}/api/ws/join-project/${projectId}?token=${token}`;
-        const webSocket = new WebSocket(wsUrl);
-
-        // Global Variables
-        let files = {};
+        // --- Global Variables ---
+        let userMode = null; // 'edit' or 'view'
+        let files = {}; // { "filename.ext": "content" }
         let activeFile = null;
         let users = new Set();
-        let userId = Math.random().toString(36).substring(7);
-        const userColors = [
-            '#9333ea', // Purple
-            '#ec4899', // Pink
-            '#14b8a6', // Teal
-            '#f97316', // Orange
-            '#8b5cf6', // Violet
-        ];
-        const userColor = userColors[Math.floor(Math.random() * userColors.length)];
+        const MAX_LINES = 500; // Maximum lines allowed
+        let lineLimitNotificationTimeout = null; // Timeout for hiding notification
 
-        // Initialize CodeMirror Editor
-        const codeEditor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+        // --- DOM Elements ---
+        const sidebar = document.getElementById("sidebar");
+        const sidebarToggle = document.getElementById("sidebar-toggle");
+        const fileListElement = document.getElementById("file-list");
+        const userListElement = document.getElementById("user-list");
+        const newFileNameInput = document.getElementById("new-file-name");
+        const createFileButton = document.getElementById("create-file");
+        const saveProjectButton = document.getElementById("save-project");
+        const activeFileNameElement = document.getElementById("file-name");
+        const activeFileTypeBadge = document.getElementById("file-type");
+        const activeFileIconElement = document.getElementById("file-icon");
+        const lineCountDisplay = document.getElementById('line-count-display');
+        const lineLimitNotificationElement = document.getElementById('line-limit-notification');
+        const codeTextArea = document.getElementById("code-editor");
+        const editorActions = document.querySelector('.editor-actions'); // Container for editor buttons
+        const createFileSection = document.querySelector('.create-file-section'); // Container for file creation
+
+
+        // --- WebSocket Setup ---
+        const domain = window.location.host;
+        const protocol = window.location.protocol;
+        const projectId = window.location.pathname.split("/")[2]; // Ensure this path is correct
+        const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+
+        if (!projectId) {
+            console.error("Project ID not found in URL.");
+            alert("Error: Could not determine the project ID from the URL.");
+        }
+        if (!token) {
+            console.warn("Auth token not found in localStorage.");
+            // Potentially redirect to login or show a message
+        }
+
+        const wsUrl = `${protocol === "https:" ? "wss://" : "ws://"}${domain}/api/ws/join-project/${projectId}?token=${token}`;
+        let webSocket;
+
+        try {
+            webSocket = new WebSocket(wsUrl);
+        } catch (error) {
+            console.error("WebSocket connection failed:", error);
+            alert("Failed to establish connection with the server. Please check your network or try again later.");
+        }
+
+        // --- CodeMirror Initialization ---
+        const codeEditor = CodeMirror.fromTextArea(codeTextArea, {
             lineNumbers: true,
-            mode: "javascript",
-            theme: "dracula",
+            mode: "javascript", // Default mode
+            theme: "material-darker", // Use the new theme
             styleActiveLine: true,
             matchBrackets: true,
             autoCloseBrackets: true,
             indentUnit: 4,
             tabSize: 4,
             lineWrapping: true,
-            extraKeys: {
-                "Ctrl-Space": "autocomplete",
-                "Tab": function (cm) {
-                    if (cm.somethingSelected()) {
-                        cm.indentSelection("add");
-                    } else {
-                        cm.replaceSelection("    ", "end");
-                    }
-                }
-            }
+            // extraKeys: { // Example: Could add more shortcuts if needed
+            //     "Ctrl-S": function(cm) { saveProjectButton.click(); }
+            // }
         });
 
-        // Update File Type Badge
-        function updateFileTypeBadge(fileName) {
-            const ext = fileName.split('.').pop();
-            const badge = document.getElementById('file-type');
-            badge.textContent = ext.toUpperCase();
-        }
+        // --- Functions ---
 
-        // Load File into Editor
-        function loadFile(fileName) {
-            activeFile = fileName;
-            document.getElementById("file-name").textContent = fileName;
-            updateFileTypeBadge(fileName);
-            codeEditor.setValue(files[fileName]);
-            codeEditor.setOption("mode", getFileMode(fileName));
-            codeEditor.refresh();
-
-            // Update active file in file list
-            document.querySelectorAll('#file-list li').forEach(li => {
-                li.classList.remove('bg-purple-600', 'bg-opacity-50');
-                if (li.dataset.fileName === fileName) {
-                    li.classList.add('bg-purple-600', 'bg-opacity-50');
-                }
-            });
-        }
+        // Get CodeMirror mode based on file extension
         function getFileMode(fileName) {
-            const ext = fileName.split(".").pop();
+            if (!fileName) return "text/plain";
+            const ext = fileName.split(".").pop().toLowerCase();
             switch (ext) {
                 case "html": return "htmlmixed";
                 case "css": return "css";
                 case "js": return "javascript";
+                case "json": return { name: "javascript", json: true };
                 case "py": return "python";
+                case "java": return "text/x-java";
+                case "c": case "h": return "text/x-csrc";
+                case "cpp": case "hpp": return "text/x-c++src";
+                case "xml": return "xml";
+                case "md": return "markdown";
                 default: return "text/plain";
             }
         }
 
+        // Get Font Awesome icon class based on file extension
+        function getFileIconClass(fileName) {
+            if (!fileName) return 'fas fa-file'; // Default icon
+            const ext = fileName.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'html': return 'fab fa-html5 text-orange-500';
+                case 'css': return 'fab fa-css3-alt text-blue-500';
+                case 'js': return 'fab fa-js-square text-yellow-400';
+                case 'jsx': return 'fab fa-react text-blue-400'; // Example for React
+                case 'py': return 'fab fa-python text-green-500';
+                case 'java': return 'fab fa-java text-red-500';
+                case 'json': return 'fas fa-database text-purple-400'; // Using database icon for JSON
+                case 'md': return 'fab fa-markdown text-gray-300';
+                case 'png': case 'jpg': case 'jpeg': case 'gif': return 'fas fa-image text-teal-400';
+                case 'txt': return 'fas fa-file-alt text-gray-300';
+                default: return 'fas fa-file-code text-gray-400'; // Generic code file
+            }
+        }
+
+        // Update the file type badge and icon in the header
+        function updateEditorHeader(fileName) {
+            activeFileNameElement.textContent = fileName || "Untitled";
+            const ext = fileName ? fileName.split('.').pop().toUpperCase() : "";
+            activeFileTypeBadge.textContent = ext;
+            activeFileTypeBadge.style.display = ext ? 'inline-block' : 'none'; // Hide if no extension
+            activeFileIconElement.innerHTML = `<i class="${getFileIconClass(fileName)}"></i>`;
+
+            // Update line count display
+            const lineCount = codeEditor.lineCount();
+            lineCountDisplay.textContent = `Lines: ${lineCount} / ${MAX_LINES}`;
+
+        }
+
+        // Load content into the editor
+        function loadFile(fileName) {
+            if (!files.hasOwnProperty(fileName)) {
+                console.warn(`Attempted to load non-existent file: ${fileName}`);
+                return;
+            }
+            activeFile = fileName;
+            updateEditorHeader(fileName); // Update header info
+
+            const fileContent = files[fileName] || ""; // Ensure content is never undefined
+            const currentCursor = codeEditor.getCursor(); // Save cursor position
+
+            codeEditor.setValue(fileContent);
+            codeEditor.setOption("mode", getFileMode(fileName));
+
+            // Try to restore cursor, handle potential errors if position is invalid after content change
+            try {
+                codeEditor.setCursor(currentCursor);
+            } catch (e) {
+                console.warn("Could not restore cursor position.", e);
+                codeEditor.setCursor({ line: 0, ch: 0 }); // Reset to start
+            }
+
+            codeEditor.refresh(); // Ensure editor display updates correctly
+            highlightActiveFileInList(fileName);
+        }
+
+        // Highlight the active file in the sidebar list
+        function highlightActiveFileInList(fileName) {
+            document.querySelectorAll('#file-list li[data-file-name]').forEach(li => {
+                li.classList.remove('bg-purple-600', 'bg-opacity-40', 'text-white');
+                li.classList.add('hover:bg-gray-700');
+                if (li.dataset.fileName === fileName) {
+                    li.classList.add('bg-purple-600', 'bg-opacity-40', 'text-white');
+                    li.classList.remove('hover:bg-gray-700');
+                }
+            });
+        }
+
+
+        // Create a list item for the file list
         function createFileListItem(fileName) {
             const li = document.createElement("li");
-            li.dataset.fileName = fileName;
-            li.className = `p-2 rounded-md hover:bg-gray-800 cursor-pointer
-                   ${activeFile === fileName ? 'bg-purple-600 bg-opacity-50' : ''}
-                   flex justify-between items-center`;
+            li.dataset.fileName = fileName; // Store filename for easy access
+            li.className = `p-2 rounded-md hover:bg-gray-700 cursor-pointer flex justify-between items-center text-sm transition-colors group`;
 
-            const fileIcon = getFileIcon(fileName);
-            fileItem = `
-                <div class="flex items-center space-x-2">
-                    <i class="${fileIcon} text-gray-400"></i>
-                    <span>${fileName}</span>
-                </div>
-                <div class="flex space-x-2" name="file-actions">
-                    <button onclick="renameFile('${fileName}')" 
-                            class="p-1 text-gray-400 hover:text-purple-500 transition-colors">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="deleteFile('${fileName}')"
-                            class="p-1 text-gray-400 hover:text-red-500 transition-colors">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+            const fileIconClass = getFileIconClass(fileName);
 
+            // Content structure (Name + Actions)
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'flex items-center space-x-2 overflow-hidden'; // Prevent long names breaking layout
+            contentDiv.innerHTML = `
+                <i class="${fileIconClass} flex-shrink-0"></i>
+                <span class="truncate" title="${fileName}">${fileName}</span>
             `;
-            if (userMode === "read") {
-                fileItem = `<div class="flex items-center space-x-2">
-                <i class="${fileIcon} text-gray-400"></i>
-                <span>${fileName}</span>
-                </div>
-                `;
-            }
-            li.innerHTML = fileItem;
 
+            // Action buttons (only if user has edit rights)
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = `file-actions flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ${userMode === 'view' ? 'hidden' : ''}`; // Hide actions in view mode & show on hover
+            actionsDiv.innerHTML = `
+                <button onclick="event.stopPropagation(); renameFile('${fileName}')" title="Rename File"
+                        class="p-1 text-gray-400 hover:text-yellow-400 transition-colors rounded">
+                    <i class="fas fa-edit fa-xs"></i>
+                </button>
+                <button onclick="event.stopPropagation(); deleteFile('${fileName}')" title="Delete File"
+                        class="p-1 text-gray-400 hover:text-red-500 transition-colors rounded">
+                    <i class="fas fa-trash fa-xs"></i>
+                </button>
+            `;
+
+            li.appendChild(contentDiv);
+            li.appendChild(actionsDiv);
+
+
+            // Click listener for loading the file (only on the li itself, not buttons)
             li.addEventListener("click", (e) => {
-                if (!e.target.closest('button')) {
+                // Check if the click target is NOT a button inside the actions div
+                if (!e.target.closest('.file-actions button')) {
                     loadFile(fileName);
                 }
             });
 
+
             return li;
         }
 
-        // Get File Icon
-        function getFileIcon(fileName) {
-            const ext = fileName.split('.').pop();
-            switch (ext) {
-                case 'html': return 'fab fa-html5';
-                case 'css': return 'fab fa-css3-alt';
-                case 'js': return 'fab fa-js';
-                case 'py': return 'fab fa-python';
-                default: return 'far fa-file-code';
+        // Update the file list in the UI
+        function updateFileListUI() {
+            fileListElement.innerHTML = ""; // Clear existing list
+
+            const fileNames = Object.keys(files).sort(); // Sort alphabetically
+
+            if (fileNames.length === 0) {
+                fileListElement.innerHTML = '<li class="text-gray-500 text-sm italic p-2">No files yet...</li>';
+                if (activeFile) { // If the active file was deleted
+                    activeFile = null;
+                    codeEditor.setValue("");
+                    updateEditorHeader(null);
+                }
+                return;
+            }
+
+
+            fileNames.forEach(fileName => {
+                const li = createFileListItem(fileName);
+                fileListElement.appendChild(li);
+            });
+
+            // If no file is active OR the active file no longer exists, load the first file
+            if ((!activeFile || !files.hasOwnProperty(activeFile)) && fileNames.length > 0) {
+                loadFile(fileNames[0]);
+            } else if (activeFile) {
+                // Ensure the currently active file remains highlighted
+                highlightActiveFileInList(activeFile);
             }
         }
 
-        // Update User List
-        function updateUserList() {
-            const userList = document.getElementById("user-list");
-            userList.innerHTML = "";
-            Array.from(users).forEach(username => {
+        // Update the collaborator list in the UI
+        function updateUserListUI() {
+            userListElement.innerHTML = ""; // Clear existing list
+            if (users.size === 0) {
+                userListElement.innerHTML = '<li class="text-gray-500 text-sm italic">No collaborators online.</li>';
+                return;
+            }
+
+            Array.from(users).sort().forEach(username => { // Sort usernames
                 const li = document.createElement("li");
-                li.className = "flex items-center space-x-2 p-2 rounded-md";
+                li.className = "flex items-center space-x-2 text-sm p-1";
                 li.innerHTML = `
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span class="text-sm">${username}</span>
+                    <span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span>
+                    <span class="truncate" title="${username}">${username}</span>
                 `;
-                userList.appendChild(li);
+                userListElement.appendChild(li);
             });
         }
 
-        // Event Listeners and other functions remain similar to the original,
-        // but with updated styling classes to match the new theme
-        webSocket.onopen = () => {
-            console.log("WebSocket connection established.");
-        };
-        webSocket.onclose = () => {
-            alert("Connection to the server was lost. Please refresh the page.");
-            console.log("WebSocket connection closed.");
-        };
-        webSocket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            console.log("Received message:", message);
-            switch (message.type) {
-                case "init-files":
-                    updateFileList(message.files);
-                    break;
-                case "file-update":
-                    console.log("File update received:", message);
-                    if (message.file_name === activeFile) {
-                        const cursor = codeEditor.getCursor();
-                        console.log("Setting editor content:", message.content);
-                        codeEditor.setValue(message.content);
-                        console.log("Restoring cursor position:", cursor);
-                        codeEditor.setCursor(cursor);
-                    }
-                    break;
-                case "user-joined":
-                    notifyUserJoined(message.username);
-                    users.add(message.username);
-                    updateUserList();
-                    break;
-                case "user-left":
-                    notifyUserLeft(message.username);
-                    users.delete(message.username); // Remove the user
-                    updateUserList();
-                    break;
-                case "joined-users":
-                    users = new Set(message.usernames);
-                    updateUserList();
-                    break;
-                case "file-rename":
-                    handleFileRename(message.old_name, message.new_name);
-                    break;
-                case "file-delete":
-                    handleFileDelete(message.file_name);
-                    break;
-                case "file-create": // Handle broadcasted file creation
-                    handleFileCreate(message.file_name);
-                    break;
-                case "access":
-                    userMode = message.role;
-                    if (userMode === "view"){
-                        var elements = document.getElementsByName("file-actions");
-                        for (var i = 0; i < elements.length; i++) {
-                            console.log(elements[i]);
-                            elements[i].style.display = "none";
-                        }
-                        document.getElementById("create-file").style.display = "none";
-                        document.getElementById("new-file-name").style.display = "none";
-                        codeEditor.setOption("readOnly", true);
-                    }
-                    break;
-                default:
-                    console.warn("Unknown message type:", message.type);
-            }
-        };
-        function handleFileCreate(fileName) {
-            if (!files[fileName]) {
-                files[fileName] = ""; // Add the new file to the files object
-                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
+        // Show toast-like notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement("div");
+            let bgColor = 'bg-blue-600'; // Default info
+            if (type === 'success') bgColor = 'bg-green-600';
+            if (type === 'error') bgColor = 'bg-red-600';
+            if (type === 'warning') bgColor = 'bg-yellow-500';
+
+
+            notification.className = `fixed bottom-4 right-4 p-4 ${bgColor} text-white rounded-lg shadow-xl text-sm z-50 transition-opacity duration-300 ease-out`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Fade out and remove
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300); // Wait for fade out transition
+            }, 3000); // Display duration
+        }
+
+
+        // Send message via WebSocket safely
+        function sendWebSocketMessage(payload) {
+            if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+                webSocket.send(JSON.stringify(payload));
+            } else {
+                console.error("WebSocket is not open. Cannot send message:", payload);
+                // Optionally queue the message or show an error
+                showNotification("Connection error. Cannot send data.", "error");
             }
         }
-        // Initialize the editor size
+
+        // Handle incoming WebSocket messages
+        function handleWebSocketMessage(event) {
+            try {
+                const message = JSON.parse(event.data);
+                console.log("WS Received:", message); // Log for debugging
+
+                switch (message.type) {
+                    case "init-files":
+                        files = {}; // Reset local files
+                        message.files.forEach(file => {
+                            files[file.name] = file.content || ""; // Ensure content is string
+                        });
+                        updateFileListUI();
+                        // Load first file automatically if needed (handled in updateFileListUI)
+                        break;
+
+                    case "file-update":
+                        if (files.hasOwnProperty(message.file_name)) {
+                            files[message.file_name] = message.content;
+                            if (message.file_name === activeFile) {
+                                // Only update editor if the change wasn't local & content differs
+                                if (codeEditor.getValue() !== message.content) {
+                                    const cursor = codeEditor.getCursor(); // Preserve cursor
+                                    codeEditor.setValue(message.content);
+                                    try { codeEditor.setCursor(cursor); } catch (e) { /* ignore */ }
+                                    // Update line count display after remote update
+                                    updateEditorHeader(activeFile);
+                                }
+                            }
+                        } else {
+                            console.warn("Received update for unknown file:", message.file_name);
+                        }
+                        break;
+
+                    case "file-create":
+                        if (!files.hasOwnProperty(message.file_name)) {
+                            files[message.file_name] = ""; // Add new file with empty content
+                            updateFileListUI();
+                            // Optional: Show notification that a file was created by someone else
+                            // showNotification(`${message.username || 'Someone'} created ${message.file_name}`, 'info');
+                        }
+                        break;
+
+                    case "file-delete":
+                        if (files.hasOwnProperty(message.file_name)) {
+                            delete files[message.file_name];
+                            updateFileListUI();
+                            // If the deleted file was active, UI update handles clearing editor
+                        }
+                        break;
+
+                    case "file-rename":
+                        if (files.hasOwnProperty(message.old_name) && !files.hasOwnProperty(message.new_name)) {
+                            files[message.new_name] = files[message.old_name];
+                            delete files[message.old_name];
+                            if (activeFile === message.old_name) {
+                                activeFile = message.new_name; // Update active file reference
+                            }
+                            updateFileListUI();
+                            // Update editor header if the renamed file was active (handled by loadFile or highlightActiveFileInList via updateFileListUI)
+                        }
+                        break;
+
+                    case "user-joined":
+                        if (message.username) {
+                            users.add(message.username);
+                            updateUserListUI();
+                            showNotification(`${message.username} joined.`, 'success');
+                        }
+                        break;
+
+                    case "user-left":
+                        if (message.username && users.has(message.username)) {
+                            users.delete(message.username);
+                            updateUserListUI();
+                            showNotification(`${message.username} left.`, 'warning');
+                        }
+                        break;
+
+                    case "joined-users": // Initial list of users
+                        users = new Set(message.usernames || []);
+                        updateUserListUI();
+                        break;
+
+                    case "access": // Handle user permissions
+                        userMode = message.role; // Expecting 'edit' or 'view'
+                        console.log(`Access level set to: ${userMode}`);
+                        configureUIAccess();
+                        updateFileListUI(); // Re-render file list to show/hide actions
+                        break;
+
+                    case "error": // General server-side errors
+                        console.error("Server error:", message.message);
+                        showNotification(`Error: ${message.message}`, "error");
+                        break;
+
+                    case "file-update-error":
+                        console.error("File update error:", message.error);
+                        showNotification(`File update failed: ${message.error}`, "error");
+                        break;
+
+                    default:
+                        console.warn("Unknown message type:", message.type);
+                }
+            } catch (error) {
+                console.error("Failed to parse WebSocket message or handle event:", error);
+            }
+        }
+
+        // Configure UI elements based on user access mode ('view' or 'edit')
+        function configureUIAccess() {
+            const isViewMode = userMode === 'view';
+
+            // Disable/Enable CodeMirror editor
+            codeEditor.setOption("readOnly", isViewMode);
+
+            // Show/Hide create file section
+            if (createFileSection) {
+                createFileSection.style.display = isViewMode ? 'none' : 'block';
+            }
+
+            // Show/Hide editor actions (like save button)
+            if (editorActions) {
+                editorActions.style.display = isViewMode ? 'none' : 'flex';
+            }
+
+            // File list item actions are handled during creation/update in createFileListItem/updateFileListUI
+            console.log(`UI configured for ${isViewMode ? 'view' : 'edit'} mode.`);
+        }
+
+
+        // --- Action Functions (triggered by user interaction) ---
+
+        function createFile() {
+            const fileName = newFileNameInput.value.trim();
+            if (!fileName) {
+                showNotification("Please enter a file name.", "warning");
+                return;
+            }
+            if (!/^[a-zA-Z0-9._-]+$/.test(fileName)) {
+                showNotification("Invalid characters in file name. Use letters, numbers, dots, underscores, hyphens.", "warning");
+                return;
+            }
+            if (files.hasOwnProperty(fileName)) {
+                showNotification(`File "${fileName}" already exists.`, "error");
+                return;
+            }
+
+            // Optimistically update UI
+            files[fileName] = ""; // Add locally
+            updateFileListUI();
+            loadFile(fileName); // Load the new empty file
+            newFileNameInput.value = ""; // Clear input
+
+            // Send message to server
+            sendWebSocketMessage({
+                type: "file-create",
+                file_name: fileName,
+            });
+        }
+
+        function renameFile(oldFileName) {
+            if (userMode === 'view') return; // Prevent action in view mode
+
+            const newFileName = prompt(`Enter new name for "${oldFileName}":`, oldFileName);
+
+            if (!newFileName || newFileName === oldFileName || !newFileName.trim()) {
+                return; // User cancelled or didn't change the name
+            }
+
+            const trimmedNewName = newFileName.trim();
+            if (!/^[a-zA-Z0-9._-]+$/.test(trimmedNewName)) {
+                showNotification("Invalid characters in file name.", "warning");
+                return;
+            }
+            if (files.hasOwnProperty(trimmedNewName)) {
+                showNotification(`File "${trimmedNewName}" already exists.`, "error");
+                return;
+            }
+
+
+            // Optimistically update UI
+            files[trimmedNewName] = files[oldFileName];
+            delete files[oldFileName];
+            if (activeFile === oldFileName) {
+                activeFile = trimmedNewName; // Update active file reference if it was renamed
+            }
+            updateFileListUI(); // This will re-render the list and update header if needed
+
+
+            // Send message to server
+            sendWebSocketMessage({
+                type: "file-rename",
+                old_name: oldFileName,
+                new_name: trimmedNewName,
+            });
+        }
+
+        function deleteFile(fileName) {
+            if (userMode === 'view') return; // Prevent action in view mode
+
+            if (confirm(`Are you sure you want to delete "${fileName}"? This cannot be undone.`)) {
+                // Optimistically update UI
+                const wasActive = activeFile === fileName;
+                delete files[fileName];
+                updateFileListUI(); // Re-renders list, handles loading next file if needed
+
+                // Send message to server
+                sendWebSocketMessage({
+                    type: "file-delete",
+                    file_name: fileName,
+                });
+            }
+        }
+
+        function saveProject() {
+            if (userMode === 'view') return;
+            console.log("Sending save-project request...");
+            sendWebSocketMessage({ type: "save-project" });
+            showNotification("Project save request sent.", 'info'); // Server should confirm actual save
+        }
+
+        // --- Event Listeners ---
+
+        // WebSocket Events
+        if (webSocket) {
+            webSocket.onopen = () => {
+                console.log("WebSocket connection established.");
+                showNotification("Connected to project!", "success");
+                // Connection is open, server should send initial state (files, users, access)
+            };
+            webSocket.onclose = (event) => {
+                console.log("WebSocket connection closed.", event.reason);
+                showNotification("Connection lost. Please refresh.", "error");
+                // Implement reconnection logic if desired
+            };
+            webSocket.onerror = (error) => {
+                console.error("WebSocket error:", error);
+                showNotification("WebSocket connection error.", "error");
+            };
+            webSocket.onmessage = handleWebSocketMessage;
+        }
+
+
+        // CodeMirror Events
+        codeEditor.on("change", (instance, changeObj) => {
+            // Ignore changes triggered programmatically (setValue) or in view mode
+            if (changeObj.origin === "setValue" || userMode === 'view') {
+                return;
+            }
+
+            const content = instance.getValue();
+            // Update local state immediately for responsiveness
+            if (activeFile && files.hasOwnProperty(activeFile)) {
+                files[activeFile] = content;
+            }
+
+            // Update line count display on change
+            updateEditorHeader(activeFile);
+
+
+            // Send update to server (debouncing could be added here for performance)
+            if (activeFile) {
+                sendWebSocketMessage({
+                    type: "file-update",
+                    file_name: activeFile,
+                    content: content,
+                    // timestamp: Date.now() // Optional: for potential conflict resolution
+                });
+            }
+        });
+
+
+        // *** LINE LIMIT IMPLEMENTATION ***
+        codeEditor.on("beforeChange", (instance, changeObj) => {
+            // Allow programmatic changes and changes in view mode (though editing shouldn't happen there anyway)
+            if (changeObj.origin === "setValue" || userMode === 'view') {
+                return;
+            }
+
+            const currentLineCount = instance.lineCount();
+            // Calculate the number of lines being added by the new text.
+            // changeObj.text is an array of strings, each representing a line.
+            const addedLineCount = changeObj.text.length;
+            // Calculate the number of lines being removed by the replacement.
+            const removedLineCount = changeObj.to.line - changeObj.from.line + 1;
+
+            // Calculate the final number of lines after the change.
+            const finalLineCount = currentLineCount - removedLineCount + addedLineCount;
+
+
+            if (finalLineCount > MAX_LINES) {
+                changeObj.cancel(); // Prevent the change
+
+                // Notify the user
+                const message = `Action prevented: Cannot exceed ${MAX_LINES} lines.`;
+
+                // Option 1: Use Alert (Simple)
+                alert(message);
+
+                // Option 2: Use custom notification element (Less intrusive)
+                /*
+                if (lineLimitNotificationElement) {
+                    lineLimitNotificationElement.textContent = message;
+                    lineLimitNotificationElement.style.display = 'block';
+                    lineLimitNotificationElement.style.opacity = '1';
+
+                    clearTimeout(lineLimitNotificationTimeout); // Clear previous timeout if any
+                    lineLimitNotificationTimeout = setTimeout(() => {
+                       if (lineLimitNotificationElement) {
+                           lineLimitNotificationElement.style.opacity = '0';
+                            // Wait for fade out before hiding completely
+                            setTimeout(() => { lineLimitNotificationElement.style.display = 'none'; }, 300);
+                        }
+                    }, 3000); // Hide after 3 seconds
+                } else {
+                    alert(message); // Fallback to alert if element not found
+                }
+                */
+            }
+        });
+
+        // DOM Event Listeners
+        sidebarToggle.addEventListener("click", () => {
+            sidebar.classList.toggle("sidebar-hidden");
+        });
+
+        createFileButton.addEventListener("click", createFile);
+        saveProjectButton.addEventListener("click", saveProject);
+
+        // Allow creating file by pressing Enter in the input field
+        newFileNameInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent form submission if it were in a form
+                createFile();
+            }
+        });
+
+        // Adjust editor size on window resize
         window.addEventListener("resize", () => {
             codeEditor.refresh();
         });
-        // Notify when a user leaves
-        function notifyUserLeft(username) {
-            const notification = document.createElement("div");
-            notification.className = "fixed bottom-4 right-4 p-4 bg-red-600 text-white rounded-lg shadow-lg";
-            notification.textContent = `${username} left the project.`;
-            document.body.appendChild(notification);
 
-            // Remove the notification after 3 seconds
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-        function notifyUserJoined(username) {
-            const notification = document.createElement("div");
-            notification.className = "fixed bottom-4 right-4 p-4 bg-green-600 text-white rounded-lg shadow-lg";
-            notification.textContent = `${username} joined the project!`;
-            document.body.appendChild(notification);
+        // --- Initial Setup ---
+        // updateFileListUI(); // Initial call, might be redundant if server sends init-files quickly
+        // updateUserListUI(); // Initial call
+        configureUIAccess(); // Set initial UI state based on default userMode (likely null/view until server confirms)
+        updateEditorHeader(null); // Set initial header state
 
-            // Remove the notification after 3 seconds
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-        // Update File List
-        function updateFileList(fileData) {
-            files = {}; // Reset the files object
-            fileData.forEach(file => {
-                files[file.name] = file.content; // Map file name to content
-            });
-
-            const fileList = document.getElementById("file-list");
-            fileList.innerHTML = ""; // Clear the existing list
-
-            Object.keys(files).forEach(fileName => {
-                const li = document.createElement("li");
-                li.className = `p-2 rounded ${activeFile === fileName ? "bg-blue-600" : "hover:bg-gray-700"} flex justify-between items-center`;
-                file = `
-                    <span>${fileName}</span>
-                    <div class="flex space-x-2" name="file-actions">
-                        <button onclick="renameFile('${fileName}')" class="p-1 text-sm text-yellow-400 hover:text-yellow-500">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteFile('${fileName}')" class="p-1 text-sm text-red-400 hover:text-red-500">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                if (userMode === "read") {
-                    file = `
-                        <span>${fileName}</span>
-                    `;
-                }
-                li.innerHTML = file;
-                li.addEventListener("click", () => loadFile(fileName));
-                fileList.appendChild(li);
-            });
-        }
-        function renameFile(fileName) {
-            const newFileName = prompt("Enter new file name:", fileName);
-            if (newFileName && newFileName !== fileName) {
-                files[newFileName] = files[fileName];
-                delete files[fileName];
-                if (activeFile === fileName) {
-                    activeFile = newFileName;
-                }
-                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
-
-                // Send WebSocket message
-                webSocket.send(JSON.stringify({
-                    type: "file-rename",
-                    old_name: fileName,
-                    new_name: newFileName,
-                }));
-            }
-        }
-        function deleteFile(fileName) {
-            if (confirm(`Are you sure you want to delete ${fileName}?`)) {
-                delete files[fileName];
-                if (activeFile === fileName) {
-                    activeFile = null;
-                    document.getElementById("file-name").textContent = "Untitled";
-                    codeEditor.setValue("");
-                }
-                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
-
-                // Send WebSocket message
-                webSocket.send(JSON.stringify({
-                    type: "file-delete",
-                    file_name: fileName,
-                }));
-            }
-        }
-        function handleFileRename(oldName, newName) {
-            if (files[oldName] != undefined) {
-                files[newName] = files[oldName]; // Move content to the new name
-                delete files[oldName]; // Remove the old file entry
-
-                if (activeFile === oldName) {
-                    activeFile = newName; // Update active file if it was renamed
-                    document.getElementById("file-name").textContent = newName;
-                    updateFileTypeBadge(newName);
-                }
-
-                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
-            }
-
-        }
-        // Save Project Button
-        document.getElementById("save-project").addEventListener("click", () => {
-            webSocket.send(JSON.stringify({
-                type: "save-project",
-            }));
-            // Notify the user
-            alert("Project saved successfully!");
-        });
-        // Create File Button
-        document.getElementById("create-file").addEventListener("click", () => {
-            const newFileName = document.getElementById("new-file-name").value.trim();
-            if (newFileName && !files[newFileName]) {
-                // Add the new file to the files object
-                files[newFileName] = "";
-
-                // Update the file list UI
-                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
-
-                // Send WebSocket message to create the file
-                webSocket.send(JSON.stringify({
-                    type: "file-create",
-                    file_name: newFileName,
-                }));
-
-                // Clear the input field
-                document.getElementById("new-file-name").value = "";
-
-                // Load the new file into the editor
-                loadFile(newFileName);
-            } else {
-                alert("File name is invalid or already exists.");
-            }
-        });
-        function handleFileDelete(fileName) {
-            if (files[fileName] != undefined) {
-                delete files[fileName]; // Remove the file from the files object
-
-                if (activeFile === fileName) {
-                    activeFile = null; // Clear active file if it was deleted
-                    document.getElementById("file-name").textContent = "Untitled";
-                    codeEditor.setValue("");
-                }
-
-                updateFileList(Object.keys(files).map(name => ({ name, content: files[name] })));
-            }
-        }
-
-        function updateFileList(fileData) {
-            files = {}; // Reset the files object
-            fileData.forEach(file => {
-                files[file.name] = file.content; // Map file name to content
-            });
-
-            const fileList = document.getElementById("file-list");
-            fileList.innerHTML = ""; // Clear the existing list
-
-            Object.keys(files).forEach(fileName => {
-                const li = createFileListItem(fileName);
-                fileList.appendChild(li);
-            });
-
-            // Load the first file if no file is active
-            if (!activeFile && Object.keys(files).length > 0) {
-                loadFile(Object.keys(files)[0]);
-            }
-        }
-        // Track changes in the editor
-        codeEditor.on("change", (editor, change) => {
-            // Ignore changes triggered by setValue (like initial loading)
-            if (change.origin === "setValue") return;
-
-            console.log("Editor content changed.");
-            const content = editor.getValue();
-            const fileName = activeFile;
-
-            if (fileName) {
-                webSocket.send(JSON.stringify({
-                    type: "file-update",
-                    file_name: activeFile,  // Changed from "file_name" to match server expectation
-                    content: content,
-                    timestamp: Date.now(),
-                }));
-            }
-        });
     </script>
 </body>
 

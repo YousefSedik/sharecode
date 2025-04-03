@@ -73,13 +73,13 @@ class ConnectionManager:
                     print("deleting project", project_id)
                     del self.project_connected_users[project_id]
                 break
-    
+
     async def notify(self, websocket: WebSocket, message: dict):
         """
         Sends a message to a specific WebSocket connection.
         """
         await websocket.send_json(message)
-        
+
     async def number_of_connected_users(self, project_id):
         return len(self.project_connected_users.get(project_id))
 
@@ -166,8 +166,19 @@ class ConnectionManager:
         file_name = data.get("file_name")
         new_content = data.get("content")
         timestamp = data.get("timestamp")
+        # Check if the new content is too long (more than 500 lines)
+        if len(new_content.split("\n")) >= 500:
+            message = {
+                "type": "file-update-error",
+                "file_name": file_name,
+                "error": "File content is too long",
+                "timestamp": timestamp,
+            }
+
+            await self.broadcast(project_id, message, sender, send_to_all=True)
+            return
         print(f"Received file update: {file_name}")
-        print(f"New content: {new_content}")
+        print(f"New content: {type(new_content)}")
         print(f"Timestamp: {timestamp}")
         # Update the file content in the project data
         files = self.project_data.get(project_id)
@@ -175,7 +186,7 @@ class ConnectionManager:
             if file["name"] == file_name:
                 print(files)
                 if (
-                    timestamp > file["timestamp"]
+                    (timestamp and timestamp > file["timestamp"]) or not timestamp
                 ):  # Only update if the new change is more recent
                     file["text"] = new_content
                     file["timestamp"] = timestamp
@@ -189,6 +200,7 @@ class ConnectionManager:
             "content": new_content,
             "timestamp": timestamp,
         }
+
         await self.broadcast(project_id, message, sender)
 
     async def handle_save(self, project_id: UUID, session: AsyncSession):
@@ -222,13 +234,13 @@ class ConnectionManager:
 
         print("Project saved")
 
-    async def broadcast(self, project_id: UUID, message: dict, sender=None):
+    async def broadcast(self, project_id: UUID, message: dict, sender=None, send_to_all=False):
         """
         Sends a message to all WebSocket connections.
         """
         print(f"Broadcasting: {message}")
         for ws, username in self.project_connected_users.get(project_id, [None, None]):
-            if sender is not None and username == sender:
+            if sender is not None and username == sender and not send_to_all:
                 continue
             await ws.send_json(message)
 
