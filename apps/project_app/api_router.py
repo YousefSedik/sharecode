@@ -242,17 +242,17 @@ async def grant_access(
     return project_access.model_dump()
 
 
-@router.delete("/project/{project_id}/access")
+@router.delete("/project/{project_id}/access/{access_id}")
 async def delete_access(
     project_id: str,
-    access: DeleteAccessProject,
+    access_id: str,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
     project = await session.get(Project, project_id)
     if project:
         if project.owner_id == current_user.id:
-            project_access = await session.get(ProjectAccess, access.access_id)
+            project_access = await session.get(ProjectAccess, access_id)
             if project_access:
                 await session.delete(project_access)
                 await session.commit()
