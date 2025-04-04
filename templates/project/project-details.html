@@ -634,11 +634,12 @@
                 document.getElementById("updatedAt").textContent = formatDate(project.updated_at);
 
                 // Set access level with appropriate styling
+                console.log(project.access_type);
                 const accessLevel = document.getElementById("accessLevelBadge");
-                if (project.access_level === "FULL_ACCESS") {
+                if (project.access_type === "Read/Write") {
                     accessLevel.textContent = "Full Access";
                     accessLevel.className = "access-badge edit";
-                } else if (project.access_level === "VIEW") {
+                } else if (project.access_type === "VIEW") {
                     accessLevel.textContent = "Read Only";
                     accessLevel.className = "access-badge read";
                 } else {
@@ -656,8 +657,9 @@
 
                 if (project.access_list && project.access_list.length > 0) {
                     project.access_list.forEach(access => {
-                        const accessType = access.access_level === "FULL_ACCESS" ? "edit" : "read";
-                        const accessText = access.access_level === "FULL_ACCESS" ? "Full Access" : "Read Only";
+                        <!-- console.log(access); -->
+                        const accessType = access.type === "FULL_ACCESS" ? "edit" : "read";
+                        const accessText = access.type === "FULL_ACCESS" ? "Full Access" : "Read Only";
 
                         const listItem = document.createElement("li");
                         listItem.className = "access-item";
