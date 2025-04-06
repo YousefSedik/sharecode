@@ -5,9 +5,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Details</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4361ee">
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <script src="/static/js/script.js"></script>
     <style>
+        /* Enhanced Mobile Responsiveness */
+
+        /* General responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header-section h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn-create {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Better navbar for mobile */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 0.75rem;
+            }
+
+            .logo {
+                margin-bottom: 0.5rem;
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo a {
+                font-size: 1.25rem;
+            }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: var(--secondary);
+                cursor: pointer;
+            }
+
+            .links {
+                width: 100%;
+                flex-direction: column;
+                gap: 0;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+
+            .links.active {
+                max-height: 300px;
+            }
+
+            .links a {
+                width: 100%;
+                padding: 0.75rem 0;
+                border-bottom: 1px solid #eee;
+            }
+
+            .user-info {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+        }
+
+        /* Project grid responsive improvements */
+        @media (max-width: 768px) {
+            .project-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .project-card {
+                margin-bottom: 0;
+            }
+
+            .project-header {
+                padding: 1rem;
+            }
+
+            .project-body {
+                padding: 1rem;
+            }
+
+            .project-meta .meta-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.2rem;
+            }
+
+            .project-footer {
+                padding: 0.75rem 1rem;
+            }
+
+            .btn-view {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Modal responsive improvements */
+        @media (max-width: 768px) {
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .modal-body {
+                padding: 1rem;
+            }
+
+            .access-input-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .access-input-group .form-control,
+            .access-input-group .form-select {
+                width: 100%;
+            }
+
+            .btn-add-user {
+                width: 100%;
+            }
+
+            .access-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .access-item>div {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Small phone screens */
+        @media (max-width: 480px) {
+            .header-section {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .header-section h1 {
+                text-align: center;
+            }
+
+            .btn-create {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .empty-state {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (max-width: 768px) {
+
+            .btn-view,
+            .btn-create,
+            .btn-add-user,
+            .btn-submit,
+            .btn-remove {
+                min-height: 44px;
+                /* Minimum touch target size */
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 16px;
+                /* Prevents iOS zoom on input */
+                padding: 0.75rem;
+                height: auto;
+            }
+
+            select.form-select {
+                padding-right: 2rem;
+                /* Space for dropdown arrow */
+            }
+
+            .access-item .btn-remove {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
         :root {
             --primary: #4361ee;
             --primary-hover: #3a56d4;
@@ -489,6 +688,7 @@
     <div class="navbar">
         <div class="logo">
             <a href="/">Share Code</a>
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
         </div>
         <div class="links">
             <a href="">Home</a>
@@ -634,11 +834,12 @@
                 document.getElementById("updatedAt").textContent = formatDate(project.updated_at);
 
                 // Set access level with appropriate styling
+                console.log(project.access_type);
                 const accessLevel = document.getElementById("accessLevelBadge");
-                if (project.access_level === "FULL_ACCESS") {
+                if (project.access_type === "Read/Write") {
                     accessLevel.textContent = "Full Access";
                     accessLevel.className = "access-badge edit";
-                } else if (project.access_level === "VIEW") {
+                } else if (project.access_type === "VIEW") {
                     accessLevel.textContent = "Read Only";
                     accessLevel.className = "access-badge read";
                 } else {
@@ -656,8 +857,9 @@
 
                 if (project.access_list && project.access_list.length > 0) {
                     project.access_list.forEach(access => {
-                        const accessType = access.access_level === "FULL_ACCESS" ? "edit" : "read";
-                        const accessText = access.access_level === "FULL_ACCESS" ? "Full Access" : "Read Only";
+                        <!-- console.log(access); -->
+                        const accessType = access.type === "FULL_ACCESS" ? "edit" : "read";
+                        const accessText = access.type === "FULL_ACCESS" ? "Full Access" : "Read Only";
 
                         const listItem = document.createElement("li");
                         listItem.className = "access-item";
@@ -898,6 +1100,29 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', function () {
             fetchProjectDetails();
+        });
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuToggle = document.getElementById('menuToggle');
+            const links = document.querySelector('.links');
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function () {
+                    links.classList.toggle('active');
+                });
+            }
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.navbar')) {
+                    links.classList.remove('active');
+                }
+            });
+
+            // Prevent clicks inside the navbar from closing the menu
+            document.querySelector('.navbar').addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
         });
     </script>
 </body>
