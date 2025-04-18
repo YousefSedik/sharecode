@@ -35,7 +35,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
             background-color: #1f2937;
-            /* Slightly lighter dark background for editor */
+            overflow: auto;
         }
 
         /* Custom Scrollbar */
@@ -94,6 +94,15 @@
             display: none;
             /* Initially hidden */
             transition: opacity 0.3s ease-in-out;
+        }
+
+        #editor-wrapper {
+            flex: 1;
+            position: relative;
+            background-color: #1f2937;
+            min-height: 0; /* Important for flex child scrolling */
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>

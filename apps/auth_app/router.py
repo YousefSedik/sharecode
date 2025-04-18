@@ -2,13 +2,15 @@ from fastapi.routing import APIRouter
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
+login_html = open("templates/auth/login.html", encoding="UTF-8").read()
+signup_html = open("templates/auth/signup.html", encoding="UTF-8").read()
+
 
 @router.get("/login", response_class=HTMLResponse)
 async def login():
-    with open("templates/auth/login.html") as f:
-        return HTMLResponse(f.read())
+    return HTMLResponse(login_html)
+
 
 @router.get("/sign-up", response_class=HTMLResponse)
 async def register():
-    with open("templates/auth/signup.html") as f:
-        return HTMLResponse(f.read())
+    return HTMLResponse(signup_html)
