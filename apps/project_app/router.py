@@ -1,19 +1,18 @@
 from fastapi.routing import APIRouter
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 router = APIRouter()
-
-index_html = open("templates/project/index.html", encoding="UTF-8").read()
-project_details_html = open(
-    "templates/project/project-details.html", encoding="UTF-8"
-).read()
+templates = Jinja2Templates(directory="templates/project")
 
 
 @router.get("/", response_class=HTMLResponse)
 async def index():
-    return HTMLResponse(index_html)
+    return templates.TemplateResponse("index.html", {"request": {}})
 
 
 @router.get("/project/{project_id}", response_class=HTMLResponse)
 async def project_detail(project_id: str):
-    return HTMLResponse(project_details_html)
+    return templates.TemplateResponse(
+        "project_detail.html", {"request": {}, "project_id": project_id}
+    )
