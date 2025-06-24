@@ -10,7 +10,6 @@ Share Code is a collaborative code-sharing platform built with FastAPI, supporti
 - **Access Control**: Grant "view" or "full access" permissions to users on a per-project basis.
 - **Real-Time Collaboration**: Work together on projects using websockets for instant updates.
 - **RESTful API**: Well-structured API endpoints for all major operations.
-- **Admin Panel**: (Optional, commented in code) SQLAdmin integration for managing data models.
 - **Static File Serving**: Serve CSS, JS, and other static assets.
 
 ## Tech Stack
@@ -20,8 +19,6 @@ Share Code is a collaborative code-sharing platform built with FastAPI, supporti
 - **Authentication**: JWT-based
 - **Real-Time**: Websockets (FastAPI + custom ConnectionManager)
 - **Frontend**: Jinja2 templates, static assets (CSS/JS)
-- **Admin**: SQLAdmin (optional)
-- **Other**: Docker support (if you add Dockerfile), dotenv for config
 
 ## Getting Started
 
@@ -34,7 +31,7 @@ Share Code is a collaborative code-sharing platform built with FastAPI, supporti
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/YousefSedik/sharecode
    cd sharecode
    ```
 
