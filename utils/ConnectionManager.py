@@ -155,12 +155,12 @@ class ConnectionManager:
         file_name = data.get("file_name")
         new_content = data.get("content")
         timestamp = data.get("timestamp")
-        # Check if the new content is too long (more than 500 lines)
-        if len(new_content.split("\n")) >= 500:
+        # Check if the new content is too long (more than 3000 characters)
+        if len(new_content) > 3000:
             message = {
                 "type": "file-update-error",
                 "file_name": file_name,
-                "error": "File content is too long",
+                "error": "File content is too long (max 3000 characters)",
                 "timestamp": timestamp,
             }
 
