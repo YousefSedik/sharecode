@@ -14,5 +14,5 @@ async def index():
 @router.get("/project/{project_id}", response_class=HTMLResponse)
 async def project_detail(project_id: str):
     return templates.TemplateResponse(
-        "project_detail.html", {"request": {}, "project_id": project_id}
+        "project-details.html", {"request": {}, "project_id": project_id}
     )
