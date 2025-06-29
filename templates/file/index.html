@@ -184,7 +184,7 @@
         let files = {}; // { "filename.ext": "content" }
         let activeFile = null;
         let users = new Set();
-        const MAX_LINES = 500; // Maximum lines allowed
+        const MAX_CHARS = 3000; // Maximum chars allowed
         let lineLimitNotificationTimeout = null; // Timeout for hiding notification
 
         // --- DOM Elements ---
@@ -296,7 +296,7 @@
 
             // Update line count display
             const lineCount = codeEditor.lineCount();
-            lineCountDisplay.textContent = `Lines: ${lineCount} / ${MAX_LINES}`;
+            lineCountDisplay.textContent = `Lines: ${lineCount} / ${MAX_CHARS}`;
 
         }
 
@@ -755,11 +755,11 @@
             const finalLineCount = currentLineCount - removedLineCount + addedLineCount;
 
 
-            if (finalLineCount > MAX_LINES) {
+            if (finalLineCount > MAX_CHARS) {
                 changeObj.cancel(); // Prevent the change
 
                 // Notify the user
-                const message = `Action prevented: Cannot exceed ${MAX_LINES} lines.`;
+                const message = `Action prevented: Cannot exceed ${MAX_CHARS} characters.`;
 
                 // Option 1: Use Alert (Simple)
                 alert(message);
